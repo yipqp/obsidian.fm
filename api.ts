@@ -28,8 +28,25 @@ export const getAuthUrl = async () => {
 	return authUrl.toString();
 };
 
+const setTokens = (
+	accessToken: string,
+	expiresIn: number,
+	refreshToken: string | null,
+) => {
+	const expiration = Date.now() + expiresIn * 1000; // expiresIn is in seconds from now
+	localStorage.setItem("expires_in", expiration.toString());
+	console.log(
+		`setting new expiration date to: ${new Date(expiration).toLocaleString()}`,
+	);
+
+	localStorage.setItem("access_token", accessToken);
+	if (refreshToken) {
+		localStorage.setItem("refresh_token", refreshToken);
+	}
+};
+
 // exchange auth code for access token
-export const getAccessToken = async (code: string) => {
+export const requestToken = async (code: string) => {
 	const codeVerifier = localStorage.getItem("code_verifier");
 
 	if (!codeVerifier) {
@@ -55,24 +72,75 @@ export const getAccessToken = async (code: string) => {
 
 	const body = await fetch(url, payload);
 	const response = await body.json(); // TODO: error checking?
-	return response.access_token;
+	setTokens(
+		response.access_token,
+		response.expires_in,
+		response.refresh_token,
+	);
+	return response;
+};
+
+const refreshTokens = async () => {
+	const refreshToken = localStorage.getItem("refresh_token");
+
+	if (!refreshToken) {
+		console.log("Error: refresh token not found");
+		return null;
+	}
+
+	const url = "https://accounts.spotify.com/api/token";
+
+	const payload = {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded",
+		},
+		body: new URLSearchParams({
+			grant_type: "refresh_token",
+			refresh_token: refreshToken,
+			client_id: clientId,
+		}),
+	};
+	const body = await fetch(url, payload);
+	const response = await body.json();
+
+	setTokens(
+		response.access_token,
+		response.expires_in,
+		response.refresh_token,
+	);
+
+	return response;
 };
 
 export const handleAuth = async (data: ObsidianProtocolData) => {
 	// TODO: need to check if code exists?
 	const code = data.code;
-	const accessToken = await getAccessToken(code);
+	await requestToken(code);
+};
 
-	if (!accessToken) {
-		return false;
-	} // TODO: add better error handling
+const getAccessToken = async () => {
+	const expirationString = window.localStorage.getItem("expires_in");
 
-	localStorage.setItem("access_token", accessToken);
-	return true;
+	if (!expirationString) {
+		console.log("Error: could not get expires_in");
+		return null;
+	}
+
+	const expiration = parseInt(expirationString);
+
+	if (Date.now() >= expiration) {
+		console.log(
+			`requesting new token. old expiration date: ${new Date(expiration).toLocaleString()}`,
+		);
+		await refreshTokens();
+	}
+	const token = window.localStorage.getItem("access_token");
+	return token;
 };
 
 export const getCurrentlyPlayingTrack = async () => {
-	const accessToken = localStorage.getItem("access_token");
+	const accessToken = await getAccessToken();
 
 	if (!accessToken) {
 		console.log("Error: user is not authorized");
