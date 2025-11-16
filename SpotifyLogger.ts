@@ -12,7 +12,7 @@ const appendDate = async (app: App) => {
 			line: editor.lastLine() + 1,
 			ch: 0,
 		});
-		editor.setCursor(editor.lastLine() - 2);
+		editor.setCursor(editor.lastLine() - 1);
 	}
 };
 
