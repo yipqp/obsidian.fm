@@ -143,7 +143,20 @@ const getAccessToken = async () => {
 	return token;
 };
 
+// wanted to prevent a random api call to check authentication
+// will fail if user revokes permissions
+export const isAuthenticated = () => {
+	return (
+		window.localStorage.getItem("access_token") &&
+		window.localStorage.getItem("refresh_token")
+	);
+};
+
 export const getCurrentlyPlayingTrack = async () => {
+	if (!isAuthenticated()) {
+		throw new Error("Please connect your spotify account");
+	}
+
 	const accessToken = (await getAccessToken()) ?? "";
 
 	const response = await fetch(
@@ -155,11 +168,26 @@ export const getCurrentlyPlayingTrack = async () => {
 		},
 	);
 
+	if (response.status === 204) {
+		throw new Error("Playback not available or active");
+	}
+
 	const data = await response.json();
+
+	if (data.error) {
+		if (data.error.status === 400) {
+			throw new Error("Please connect your spotify account");
+		}
+		throw new Error(data.error.message);
+	}
+
 	return data;
 };
 
 export const searchTrack = async (query: string) => {
+	if (!isAuthenticated()) {
+		throw new Error("Please connect your spotify account");
+	}
 	if (!query) {
 		return null;
 	}
@@ -183,5 +211,13 @@ export const searchTrack = async (query: string) => {
 	});
 
 	const data = await response.json();
+
+	if (data.error) {
+		if (data.error.status === 400) {
+			throw new Error("Please connect your spotify account");
+		}
+		throw new Error(data.error.message);
+	}
+
 	return data;
 };

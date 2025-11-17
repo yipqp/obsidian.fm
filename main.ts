@@ -1,5 +1,10 @@
 import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
-import { getAuthUrl, getCurrentlyPlayingTrack, handleAuth } from "api";
+import {
+	getAuthUrl,
+	getCurrentlyPlayingTrack,
+	handleAuth,
+	isAuthenticated,
+} from "api";
 import { FolderSuggest } from "FolderSuggest";
 import { SpotifyLogModal } from "SpotifyLogModal";
 import { logSong } from "SpotifyLogger";
@@ -26,23 +31,20 @@ export default class SpotifyLogger extends Plugin {
 			id: "log-currently-playing-track",
 			name: "Log current playing track",
 			callback: async () => {
-				const currentlyPlaying = await getCurrentlyPlayingTrack();
-				if (currentlyPlaying?.error) {
-					let message = `Error: ${currentlyPlaying.error.message}`;
-					if (currentlyPlaying.error.status === 401) {
-						message += "\nPlease connect your Spotify account";
-					}
+				try {
+					const currentlyPlaying = await getCurrentlyPlayingTrack();
+					new SpotifyLogModal(this.app, async (result: string) => {
+						await logSong(
+							this.app,
+							this.settings.spotifyLoggerFolderPath,
+							result,
+							currentlyPlaying,
+						);
+					}).open();
+				} catch (err) {
+					const message = `[Spotify Logger] Error: ${err.message}`;
 					new Notice(`${message}`, 3000);
-					return;
 				}
-				new SpotifyLogModal(this.app, async (result: string) => {
-					await logSong(
-						this.app,
-						this.settings.spotifyLoggerFolderPath,
-						result,
-						currentlyPlaying,
-					);
-				}).open();
 			},
 		});
 
@@ -64,6 +66,10 @@ export default class SpotifyLogger extends Plugin {
 			id: "search-track",
 			name: "Search track",
 			callback: async () => {
+				if (!isAuthenticated()) {
+					new Notice("Please connect your Spotify account", 3000);
+					return;
+				}
 				new SpotifySearchModal(this.app).open();
 			},
 		});
