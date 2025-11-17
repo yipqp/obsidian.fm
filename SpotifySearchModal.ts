@@ -34,34 +34,34 @@ const CONST_SONGS: Song[] = [
 ];
 
 export class SpotifySearchModal extends SuggestModal<Song> {
-	// songs: Song[];
 	isLoading: boolean;
 	lastQuery: string;
 	searchDebouncer: Debouncer<
 		[query: string, cb: (songs: Song[]) => void],
-		Promise<Song[]>
+		void
 	>;
 
 	constructor(app: App) {
 		super(app);
+		this.isLoading = false;
+		this.lastQuery = "";
 		this.searchDebouncer = debounce(
-			async (
-				query: string,
-				cb: (songs: Song[]) => void,
-			): Promise<Song[]> => {
-				if (query === "") {
-					console.log("query is empty");
+			async (query: string, cb: (songs: Song[]) => void) => {
+				if (query === "" || query === this.lastQuery) {
 					return Promise.resolve([]);
 				}
-				if (query === this.lastQuery) {
-					console.log("query is the same as last");
-					return Promise.resolve([]);
-				}
+
 				this.lastQuery = query;
 
-				console.log("starting search");
-				const data = await searchTrack(query);
-				console.log("finished search");
+				console.log("calling search api");
+
+				let data;
+
+				try {
+					data = await searchTrack(query);
+				} catch (err) {
+					throw err;
+				}
 
 				if (!data) {
 					console.log("no data");
@@ -80,22 +80,20 @@ export class SpotifySearchModal extends SuggestModal<Song> {
 					};
 				});
 
-				console.log("search complete");
-				console.log(JSON.stringify(songs, null, 2));
+				// console.log(JSON.stringify(songs, null, 2));
+				this.isLoading = false;
 				cb(songs);
-				return songs;
 			},
 			300,
 			true,
 		);
 	}
 
-	// Returns all available suggestions.
-	// is fired when input is changed
-	// reference: https://forum.obsidian.md/t/avoid-frequent-getsuggestions-call-in-suggestmodal/84674
+	// called when input is changed
+	// reference: https://github.com/bbawj/obsidian-semantic-search/blob/45e2cc2e10b78bcc357287a4abc22a81df7ce36d/src/ui/linkSuggest.ts#L45
 	async getSuggestions(query: string): Promise<Song[]> {
+		//TODO: handle not authenticated. ideally in main before opening this modal?
 		this.isLoading = true;
-		console.log("starting getSuggetsions..");
 		return new Promise((resolve) => {
 			this.searchDebouncer(query, (query) => {
 				resolve(query);
@@ -103,22 +101,12 @@ export class SpotifySearchModal extends SuggestModal<Song> {
 		});
 	}
 
-	// const temp = this.debouncedSearch(query);
-
-	// this.resultContainerEl.empty();
-	// const r = await this.debouncedSearch(query).run();
-	// this.isLoading = false;
-	// console.log(r);
-	// 	if (!r) return [];
-	// 	return r;
-
-	// Renders each suggestion item.
 	renderSuggestion(song: Song, el: HTMLElement) {
 		el.addClass("song-container");
 		const imageEl = el.createEl("img", { cls: "song-img" });
 		imageEl.src = song.image.url;
-		imageEl.width = song.image.width;
-		imageEl.height = song.image.height;
+		imageEl.width = 50 || song.image.width; // TODO: figure out best way to handle img sizing
+		imageEl.height = 50 || song.image.height;
 		const songTextContainer = el.createDiv("song-text-container");
 		songTextContainer.createEl("div", {
 			text: song.name,
@@ -127,7 +115,6 @@ export class SpotifySearchModal extends SuggestModal<Song> {
 		songTextContainer.createEl("small", { text: song.artists.toString() });
 	}
 
-	// Perform action on the selected suggestion.
 	onChooseSuggestion(song: Song, evt: MouseEvent | KeyboardEvent) {
 		new Notice(`Selected ${song.name}`);
 	}
