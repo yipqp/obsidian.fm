@@ -6,3 +6,31 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+/* make input take full width */
+.spotify-log-modal-input {
+	resize: vertical;
+	flex: 1;
+}
+
+.song-img {
+	border-radius: 8px;
+}
+
+.song-container {
+	display: flex;
+	gap: 15px;
+	margin: 5px 0px;
+}
+
+.song-text-container {
+	display: flex;
+	flex-flow: column;
+	justify-content: space-between;
+	padding: 3px
+}
+
+.song-title {
+	font-size: larger;
+}
+

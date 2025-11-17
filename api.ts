@@ -1,6 +1,7 @@
 // pkce reference: https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow
 
-import { ObsidianProtocolData } from "obsidian";
+import { Notice, ObsidianProtocolData } from "obsidian";
+import { URLSearchParams } from "url";
 import { generateRandomString, sha256, base64encode } from "utils";
 
 const clientId = "44e32ffa3b9c46398637431d6808481d";
@@ -114,7 +115,10 @@ const refreshTokens = async () => {
 };
 
 export const handleAuth = async (data: ObsidianProtocolData) => {
-	// TODO: need to check if code exists?
+	if (data?.error) {
+		new Notice(`Error: ${data.error}`, 3000);
+		return;
+	}
 	const code = data.code;
 	await requestToken(code);
 };
@@ -139,13 +143,21 @@ const getAccessToken = async () => {
 	return token;
 };
 
-export const getCurrentlyPlayingTrack = async () => {
-	const accessToken = await getAccessToken();
+// wanted to prevent a random api call to check authentication
+// will fail if user revokes permissions
+export const isAuthenticated = () => {
+	return (
+		window.localStorage.getItem("access_token") &&
+		window.localStorage.getItem("refresh_token")
+	);
+};
 
-	if (!accessToken) {
-		console.log("Error: user is not authorized");
-		return null;
+export const getCurrentlyPlayingTrack = async () => {
+	if (!isAuthenticated()) {
+		throw new Error("Please connect your spotify account");
 	}
+
+	const accessToken = (await getAccessToken()) ?? "";
 
 	const response = await fetch(
 		"https://api.spotify.com/v1/me/player/currently-playing",
@@ -156,7 +168,56 @@ export const getCurrentlyPlayingTrack = async () => {
 		},
 	);
 
-	const data = await response.json(); // TODO: error checking?
-	const item = data.item;
-	return item;
+	if (response.status === 204) {
+		throw new Error("Playback not available or active");
+	}
+
+	const data = await response.json();
+
+	if (data.error) {
+		if (data.error.status === 400) {
+			throw new Error("Please connect your spotify account");
+		}
+		throw new Error(data.error.message);
+	}
+
+	return data;
+};
+
+export const searchTrack = async (query: string) => {
+	if (!isAuthenticated()) {
+		throw new Error("Please connect your spotify account");
+	}
+	if (!query) {
+		return null;
+	}
+
+	const accessToken = (await getAccessToken()) ?? "";
+
+	const searchURL = new URL("https://api.spotify.com/v1/search");
+
+	const params = {
+		q: query,
+		type: "track",
+		limit: "10",
+	};
+
+	searchURL.search = new URLSearchParams(params).toString();
+
+	const response = await fetch(searchURL.toString(), {
+		headers: {
+			Authorization: "Bearer " + accessToken,
+		},
+	});
+
+	const data = await response.json();
+
+	if (data.error) {
+		if (data.error.status === 400) {
+			throw new Error("Please connect your spotify account");
+		}
+		throw new Error(data.error.message);
+	}
+
+	return data;
 };
