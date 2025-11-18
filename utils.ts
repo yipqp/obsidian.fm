@@ -1,3 +1,5 @@
+import { moment } from "obsidian";
+
 export const generateRandomString = (length: number) => {
 	const possible =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -16,4 +18,18 @@ export const base64encode = (input) => {
 		.replace(/=/g, "")
 		.replace(/\+/g, "-")
 		.replace(/\//g, "_");
+};
+
+export const formatMs = (ms: string) => {
+	const msInt = parseInt(ms);
+	let msFormatted;
+
+	// song is >= 1 hour
+	if (msInt >= 3600000) {
+		msFormatted = moment.utc(msInt).format("HH:mm:ss");
+	} else {
+		msFormatted = moment.utc(msInt).format("mm:ss");
+	}
+
+	return msFormatted;
 };

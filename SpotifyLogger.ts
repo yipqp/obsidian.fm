@@ -1,17 +1,9 @@
 import { App, normalizePath, moment } from "obsidian";
+import { formatMs } from "utils";
 
 const formatInput = (input: String, progressMs: string) => {
 	const date = moment().format("D MMM YYYY, h:mma");
-	const progressAsInt = parseInt(progressMs);
-	let progress;
-
-	// song is >= 1 hour
-	if (progressAsInt >= 3600000) {
-		progress = moment.utc(progressAsInt).format("HH:mm:ss");
-	} else {
-		progress = moment.utc(progressAsInt).format("mm:ss");
-	}
-
+	const progress = formatMs(progressMs);
 	const surroundChar = "**";
 	const formattedinput = `${surroundChar}${date}${surroundChar}
 
@@ -57,6 +49,7 @@ export const createSongFile = async (app: App, folderPath: string, song) => {
 	const artists = song.artists.map((artist) => artist.name).join(", ");
 	const id = song.id; // file name
 	const name = song.name;
+	const duration = formatMs(song.duration_ms);
 
 	// check if file exists
 	const filePath = normalizePath(folderPath + "/" + id + ".md");
@@ -73,6 +66,7 @@ export const createSongFile = async (app: App, folderPath: string, song) => {
 				frontmatter["title"] = name; // TODO: let user change which frontmatter should reflect display title?
 				frontmatter["artists"] = artists;
 				frontmatter["album"] = album;
+				frontmatter["duration"] = duration;
 				// frontmatter["log count"] = 1;
 				frontmatter["aliases"] = name;
 			});
