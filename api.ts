@@ -2,7 +2,7 @@
 
 import { Notice, ObsidianProtocolData } from "obsidian";
 import { URLSearchParams } from "url";
-import { generateRandomString, sha256, base64encode } from "utils";
+import { generateRandomString, sha256, base64encode, formatMs } from "utils";
 
 const clientId = "44e32ffa3b9c46398637431d6808481d";
 const redirectUri = "obsidian://spotify-auth";
@@ -220,4 +220,19 @@ export const searchTrack = async (query: string) => {
 	}
 
 	return data;
+};
+
+// returns object with relevant information about the playing track
+export const processCurrentlyPlayingResponse = (res) => {
+	const song = res.item;
+	const songInfo = {
+		album: song.album.name,
+		albumid: song.album.id,
+		artists: song.artists.map((artist) => artist.name).join(", "),
+		id: song.id,
+		name: song.name,
+		duration: formatMs(song.duration_ms),
+		progress: formatMs(res.progress_ms),
+	};
+	return songInfo;
 };

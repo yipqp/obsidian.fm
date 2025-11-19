@@ -1,9 +1,18 @@
+import { processCurrentlyPlayingResponse } from "api";
 import { App, Modal, Setting } from "obsidian";
 
 export class SpotifyLogModal extends Modal {
-	constructor(app: App, onSubmit: (result: string) => void) {
+	constructor(
+		app: App,
+		currentlyPlaying,
+		onSubmit: (result: string) => void,
+	) {
 		super(app);
-		this.setTitle("Enter thoughts:");
+
+		const songInfo = processCurrentlyPlayingResponse(currentlyPlaying);
+		const title = `${songInfo.artists} - ${songInfo.name}`;
+		this.setTitle(title);
+
 		let input = "";
 
 		// use text or textArea?
@@ -19,6 +28,12 @@ export class SpotifyLogModal extends Modal {
 			text.onChange((value) => {
 				input = value;
 			});
+		});
+
+		inputSetting.settingEl.addClass("spotify-log-modal-input-container");
+		inputSetting.settingEl.createEl("div", {
+			text: songInfo.progress,
+			cls: "spotify-log-modal-progress",
 		});
 
 		// remove because prevents text area from taking full width

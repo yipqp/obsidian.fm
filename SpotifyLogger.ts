@@ -1,3 +1,4 @@
+import { processCurrentlyPlayingResponse } from "api";
 import { App, normalizePath, moment } from "obsidian";
 import { formatMs } from "utils";
 
@@ -43,16 +44,15 @@ const appendInput = async (
 
 // creates new song file in folder path if not exist
 // returns the song file
-export const createSongFile = async (app: App, folderPath: string, song) => {
-	const album = song.album.name;
-	const albumid = song.album.id;
-	const artists = song.artists.map((artist) => artist.name).join(", ");
-	const id = song.id; // file name
-	const name = song.name;
-	const duration = formatMs(song.duration_ms);
+export const createSongFile = async (
+	app: App,
+	folderPath: string,
+	currentlyPlaying,
+) => {
+	const songInfo = processCurrentlyPlayingResponse(currentlyPlaying);
 
 	// check if file exists
-	const filePath = normalizePath(folderPath + "/" + id + ".md");
+	const filePath = normalizePath(folderPath + "/" + songInfo.id + ".md");
 
 	let file = app.vault.getFileByPath(filePath);
 
@@ -63,12 +63,12 @@ export const createSongFile = async (app: App, folderPath: string, song) => {
 		 */
 		try {
 			app.fileManager.processFrontMatter(file, (frontmatter) => {
-				frontmatter["title"] = name; // TODO: let user change which frontmatter should reflect display title?
-				frontmatter["artists"] = artists;
-				frontmatter["album"] = album;
-				frontmatter["duration"] = duration;
+				frontmatter["title"] = songInfo.name; // TODO: let user change which frontmatter should reflect display title?
+				frontmatter["artists"] = songInfo.artists;
+				frontmatter["album"] = songInfo.album;
+				frontmatter["duration"] = songInfo.duration;
 				// frontmatter["log count"] = 1;
-				frontmatter["aliases"] = name;
+				frontmatter["aliases"] = songInfo.name;
 			});
 		} catch (e) {
 			console.log(`Error: ${e}`);
@@ -94,10 +94,9 @@ export const logSong = async (
 	input: string,
 	currentlyPlaying,
 ) => {
-	const song = currentlyPlaying.item;
 	const progressMs = currentlyPlaying.progress_ms;
 
-	const file = await createSongFile(app, folderPath, song);
+	const file = await createSongFile(app, folderPath, currentlyPlaying);
 	const filePath = file.path;
 
 	await appendInput(app, filePath, input, progressMs);

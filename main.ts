@@ -33,14 +33,18 @@ export default class SpotifyLogger extends Plugin {
 			callback: async () => {
 				try {
 					const currentlyPlaying = await getCurrentlyPlayingTrack();
-					new SpotifyLogModal(this.app, async (result: string) => {
-						await logSong(
-							this.app,
-							this.settings.spotifyLoggerFolderPath,
-							result,
-							currentlyPlaying,
-						);
-					}).open();
+					new SpotifyLogModal(
+						this.app,
+						currentlyPlaying,
+						async (result: string) => {
+							await logSong(
+								this.app,
+								this.settings.spotifyLoggerFolderPath,
+								result,
+								currentlyPlaying,
+							);
+						},
+					).open();
 				} catch (err) {
 					const message = `[Spotify Logger] Error: ${err.message}`;
 					new Notice(`${message}`, 3000);
