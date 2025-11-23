@@ -1,52 +1,23 @@
 import { App, debounce, Debouncer, Notice, SuggestModal } from "obsidian";
-import { searchTrack } from "api";
+import { processTrack, searchTrack } from "api";
+import { Image, Track, TrackFormatted, Tracks } from "types";
 
-//TODO: move types to new file
-interface Song {
-	name: string;
-	artists: string[];
-	id: string;
-	image: Image;
-}
-
-export interface Image {
-	url: string;
-	height: number;
-	width: number;
-}
-
-const img: Image = {
-	url: "https://i.scdn.co/image/ab67616d000048510dea455846b0633093676c60",
-	height: 50,
-	width: 50,
-};
-
-const CONST_SONGS: Song[] = [
-	{ name: "Stereo Boy", artists: ["FKA twigs"], id: "temp", image: img },
-	{ name: "Video", artists: ["Jane Remover"], id: "temp", image: img },
-	{ name: "Jaded", artists: ["Malibu"], id: "temp", image: img },
-	{ name: "Another High", artists: ["Malibu"], id: "temp", image: img },
-	{ name: "Amnesia", artists: ["fakemink"], id: "temp", image: img },
-	{ name: "Hoover", artists: ["Yung Lean"], id: "temp", image: img },
-	{ name: "Gnaw", artists: ["Alex G"], id: "temp", image: img },
-	{ name: "choke enough", artists: ["Oklou"], id: "temp", image: img },
-	{ name: "x w x", artists: ["yeule"], id: "temp", image: img },
-];
-
-export class SpotifySearchModal extends SuggestModal<Song> {
+export class SpotifySearchModal extends SuggestModal<TrackFormatted> {
 	isLoading: boolean;
 	lastQuery: string;
 	searchDebouncer: Debouncer<
-		[query: string, cb: (songs: Song[]) => void],
+		[query: string, cb: (tracks: TrackFormatted[]) => void],
 		void
 	>;
+	cb: (track: TrackFormatted) => Promise<void>;
 
-	constructor(app: App) {
+	constructor(app: App, cb: (track: TrackFormatted) => Promise<void>) {
 		super(app);
 		this.isLoading = false;
 		this.lastQuery = "";
+		this.cb = cb;
 		this.searchDebouncer = debounce(
-			async (query: string, cb: (songs: Song[]) => void) => {
+			async (query: string, cb: (tracks: TrackFormatted[]) => void) => {
 				if (query === "" || query === this.lastQuery) {
 					return Promise.resolve([]);
 				}
@@ -68,21 +39,13 @@ export class SpotifySearchModal extends SuggestModal<Song> {
 					return Promise.resolve([]);
 				}
 
-				const items = data.tracks.items;
-				const songs: Song[] = items.map((item) => {
-					const images = item.album.images;
-					const smallest = images[images.length - 1];
-					return {
-						name: item.name,
-						artists: item.artists.map((artist) => artist.name),
-						id: item.id,
-						image: smallest,
-					};
-				});
+				const tracks: TrackFormatted[] = data.tracks.items.map(
+					(track: Track) => processTrack(track),
+				);
 
-				// console.log(JSON.stringify(songs, null, 2));
+				// console.log(JSON.stringify(tracks, null, 2));
 				this.isLoading = false;
-				cb(songs);
+				cb(tracks);
 			},
 			300,
 			true,
@@ -91,7 +54,7 @@ export class SpotifySearchModal extends SuggestModal<Song> {
 
 	// called when input is changed
 	// reference: https://github.com/bbawj/obsidian-semantic-search/blob/45e2cc2e10b78bcc357287a4abc22a81df7ce36d/src/ui/linkSuggest.ts#L45
-	async getSuggestions(query: string): Promise<Song[]> {
+	async getSuggestions(query: string): Promise<TrackFormatted[]> {
 		//TODO: handle not authenticated. ideally in main before opening this modal?
 		this.isLoading = true;
 		return new Promise((resolve) => {
@@ -101,21 +64,29 @@ export class SpotifySearchModal extends SuggestModal<Song> {
 		});
 	}
 
-	renderSuggestion(song: Song, el: HTMLElement) {
-		el.addClass("song-container");
-		const imageEl = el.createEl("img", { cls: "song-img" });
-		imageEl.src = song.image.url;
-		imageEl.width = 50 || song.image.width; // TODO: figure out best way to handle img sizing
-		imageEl.height = 50 || song.image.height;
-		const songTextContainer = el.createDiv("song-text-container");
-		songTextContainer.createEl("div", {
-			text: song.name,
-			cls: "song-title",
+	renderSuggestion(track: TrackFormatted, el: HTMLElement) {
+		el.addClass("track-container");
+		const imageEl = el.createEl("img", { cls: "track-img" });
+
+		imageEl.src = track.image.url;
+		imageEl.width = 50 || track.image.width; // TODO: figure out best way to handle img sizing
+		imageEl.height = 50 || track.image.height;
+
+		const trackTextContainer = el.createDiv("track-text-container");
+		trackTextContainer.createEl("div", {
+			text: track.name,
+			cls: "track-title",
 		});
-		songTextContainer.createEl("small", { text: song.artists.toString() });
+		trackTextContainer.createEl("small", {
+			text: track.artists.toString(),
+		});
 	}
 
-	onChooseSuggestion(song: Song, evt: MouseEvent | KeyboardEvent) {
-		new Notice(`Selected ${song.name}`);
+	async onChooseSuggestion(
+		track: TrackFormatted,
+		evt: MouseEvent | KeyboardEvent,
+	) {
+		new Notice(`Selected ${track.name}`);
+		await this.cb(track);
 	}
 }

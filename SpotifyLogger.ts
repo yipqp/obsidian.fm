@@ -1,22 +1,20 @@
-import { App, normalizePath, moment } from "obsidian";
+import { processCurrentlyPlayingResponse } from "api";
+import { App, normalizePath, moment, MarkdownView } from "obsidian";
+import { PlaybackState, TrackFormatted, TrackItem } from "types";
 
-const formatInput = (input: String, progressMs: string) => {
+const formatInput = (
+	input: String,
+	progress: string,
+	blockId?: string,
+	referenceLink?: string,
+) => {
 	const date = moment().format("D MMM YYYY, h:mma");
-	const progressAsInt = parseInt(progressMs);
-	let progress;
-
-	// song is >= 1 hour
-	if (progressAsInt >= 3600000) {
-		progress = moment.utc(progressAsInt).format("HH:mm:ss");
-	} else {
-		progress = moment.utc(progressAsInt).format("mm:ss");
-	}
-
 	const surroundChar = "**";
 	const formattedinput = `${surroundChar}${date}${surroundChar}
 
-${input}
-*${progress}*
+${input} ${blockId ? `^${blockId}` : ""}
+
+*${referenceLink ? `${referenceLink}, ` : ""}${progress}*
 
 ---
 
@@ -24,57 +22,49 @@ ${input}
 	return formattedinput;
 };
 
-const appendInput = async (
+export const appendInput = async (
 	app: App,
 	filePath: string,
 	input: string,
-	progressMs: string,
+	progress: string,
+	blockId?: string,
+	referenceLink?: string,
 ) => {
 	const file = app.vault.getFileByPath(filePath);
 	if (!file) {
 		console.log(`Error: file ${filePath} could not be found`);
 		return;
 	}
-	const formattedinput = formatInput(input, progressMs);
-	app.vault.append(file, formattedinput);
-
-	// const view = app.workspace.getActiveViewOfType(MarkdownView);
-	// if (view) {
-	// 	const editor = view.editor;
-	// 	editor.replaceRange(formattedinput, {
-	// 		line: editor.lastLine() + 1,
-	// 		ch: 0,
-	// 	});
-	// 	editor.setCursor(editor.lastLine() - 1);
-	// }
+	const formattedinput = formatInput(input, progress, blockId, referenceLink);
+	await app.vault.append(file, formattedinput);
 };
 
 // creates new song file in folder path if not exist
 // returns the song file
-export const createSongFile = async (app: App, folderPath: string, song) => {
-	const album = song.album.name;
-	const albumid = song.album.id;
-	const artists = song.artists.map((artist) => artist.name).join(", ");
-	const id = song.id; // file name
-	const name = song.name;
+export const createSongFile = async (
+	app: App,
+	folderPath: string,
+	track: TrackFormatted,
+) => {
+	const filePath = normalizePath(folderPath + "/" + track.id + ".md");
 
 	// check if file exists
-	const filePath = normalizePath(folderPath + "/" + id + ".md");
-
 	let file = app.vault.getFileByPath(filePath);
 
 	if (!file) {
+		console.log("song file not exist, creating");
 		file = await app.vault.create(filePath, "");
 		/* edit frontmatter for https://github.com/snezhig/obsidian-front-matter-title
 		 * this is to change the file display title, since the title is a unique spotify id
 		 */
 		try {
 			app.fileManager.processFrontMatter(file, (frontmatter) => {
-				frontmatter["title"] = name; // TODO: let user change which frontmatter should reflect display title?
-				frontmatter["artists"] = artists;
-				frontmatter["album"] = album;
+				frontmatter["title"] = track.name; // TODO: let user change which frontmatter should reflect display title?
+				frontmatter["artists"] = track.artists;
+				frontmatter["album"] = track.album;
+				frontmatter["duration"] = track.duration;
 				// frontmatter["log count"] = 1;
-				frontmatter["aliases"] = name;
+				frontmatter["aliases"] = track.name;
 			});
 		} catch (e) {
 			console.log(`Error: ${e}`);
@@ -98,20 +88,41 @@ export const logSong = async (
 	app: App,
 	folderPath: string,
 	input: string,
-	currentlyPlaying,
+	currentlyPlaying: PlaybackState,
+	blockId?: string,
 ) => {
-	const song = currentlyPlaying.item;
-	const progressMs = currentlyPlaying.progress_ms;
+	const track = processCurrentlyPlayingResponse(currentlyPlaying);
 
-	const file = await createSongFile(app, folderPath, song);
+	if (!track) {
+		console.log("error processing playback state");
+		return null;
+	}
+
+	if (!track.progress) {
+		console.log("no track progress?");
+		track.progress = ""; //TODO: handle no progress (not currently playing)
+	}
+
+	const file = await createSongFile(app, folderPath, track);
 	const filePath = file.path;
 
-	await appendInput(app, filePath, input, progressMs);
+	await appendInput(app, filePath, input, track.progress, blockId);
 
 	// if file is currently active, don't open file
 	const activeFile = app.workspace.getActiveFile();
 
 	if (!activeFile || activeFile.path != filePath) {
-		await app.workspace.getLeaf().openFile(file);
+		await app.workspace.getLeaf().openFile(file); //TODO: move this to different file?
+	}
+
+	const editor = app.workspace.activeEditor?.editor;
+
+	if (editor) {
+		// if the file to log is the currently active file
+		// then editor.lastLine() will not be updated in time even after we append
+		// after await read(file) or sleep(10), the line count will be correct
+		// unaware of better solution
+		await app.vault.cachedRead(file);
+		editor.setCursor({ line: editor.lastLine(), ch: 0 });
 	}
 };

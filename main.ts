@@ -1,4 +1,11 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
+import {
+	App,
+	MetadataCache,
+	Notice,
+	Plugin,
+	PluginSettingTab,
+	Setting,
+} from "obsidian";
 import {
 	getAuthUrl,
 	getCurrentlyPlayingTrack,
@@ -33,14 +40,20 @@ export default class SpotifyLogger extends Plugin {
 			callback: async () => {
 				try {
 					const currentlyPlaying = await getCurrentlyPlayingTrack();
-					new SpotifyLogModal(this.app, async (result: string) => {
-						await logSong(
-							this.app,
-							this.settings.spotifyLoggerFolderPath,
-							result,
-							currentlyPlaying,
-						);
-					}).open();
+					new SpotifyLogModal(
+						this.app,
+						currentlyPlaying,
+						this.settings.spotifyLoggerFolderPath,
+						async (input: string, blockId: string) => {
+							await logSong(
+								this.app,
+								this.settings.spotifyLoggerFolderPath,
+								input,
+								currentlyPlaying,
+								blockId,
+							);
+						},
+					).open();
 				} catch (err) {
 					const message = `[Spotify Logger] Error: ${err.message}`;
 					new Notice(`${message}`, 3000);
@@ -70,7 +83,16 @@ export default class SpotifyLogger extends Plugin {
 					new Notice("Please connect your Spotify account", 3000);
 					return;
 				}
-				new SpotifySearchModal(this.app).open();
+				new SpotifySearchModal(this.app).open(); //TODO: REMOVE THIS OR ADD THE SECOND PARAM
+			},
+		});
+		this.addCommand({
+			id: "temp",
+			name: "test",
+			callback: () => {
+				const curFile = this.app.workspace.getActiveFile();
+				if (!curFile) return;
+				console.log(this.app.metadataCache.getFileCache(curFile));
 			},
 		});
 
