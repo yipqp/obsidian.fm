@@ -1,4 +1,11 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
+import {
+	App,
+	MetadataCache,
+	Notice,
+	Plugin,
+	PluginSettingTab,
+	Setting,
+} from "obsidian";
 import {
 	getAuthUrl,
 	getCurrentlyPlayingTrack,
@@ -37,12 +44,13 @@ export default class SpotifyLogger extends Plugin {
 						this.app,
 						currentlyPlaying,
 						this.settings.spotifyLoggerFolderPath,
-						async (input: string) => {
+						async (input: string, blockId: string) => {
 							await logSong(
 								this.app,
 								this.settings.spotifyLoggerFolderPath,
 								input,
 								currentlyPlaying,
+								blockId,
 							);
 						},
 					).open();
@@ -76,6 +84,15 @@ export default class SpotifyLogger extends Plugin {
 					return;
 				}
 				new SpotifySearchModal(this.app).open(); //TODO: REMOVE THIS OR ADD THE SECOND PARAM
+			},
+		});
+		this.addCommand({
+			id: "temp",
+			name: "test",
+			callback: () => {
+				const curFile = this.app.workspace.getActiveFile();
+				if (!curFile) return;
+				console.log(this.app.metadataCache.getFileCache(curFile));
 			},
 		});
 

@@ -1,15 +1,20 @@
 import { processCurrentlyPlayingResponse } from "api";
 import { App, normalizePath, moment } from "obsidian";
 import { PlaybackState, TrackFormatted, TrackItem } from "types";
-import { formatMs } from "utils";
 
-const formatInput = (input: String, progress: string) => {
+const formatInput = (
+	input: String,
+	progress: string,
+	blockId?: string,
+	referenceLink?: string,
+) => {
 	const date = moment().format("D MMM YYYY, h:mma");
 	const surroundChar = "**";
 	const formattedinput = `${surroundChar}${date}${surroundChar}
 
-${input}
-*${progress}*
+${input} ${blockId ? `^${blockId}` : ""}
+
+*${referenceLink ? `${referenceLink}, ` : ""}${progress}*
 
 ---
 
@@ -17,18 +22,20 @@ ${input}
 	return formattedinput;
 };
 
-const appendInput = async (
+export const appendInput = async (
 	app: App,
 	filePath: string,
 	input: string,
 	progress: string,
+	blockId?: string,
+	referenceLink?: string,
 ) => {
 	const file = app.vault.getFileByPath(filePath);
 	if (!file) {
 		console.log(`Error: file ${filePath} could not be found`);
 		return;
 	}
-	const formattedinput = formatInput(input, progress);
+	const formattedinput = formatInput(input, progress, blockId, referenceLink);
 	app.vault.append(file, formattedinput);
 
 	// const view = app.workspace.getActiveViewOfType(MarkdownView);
@@ -55,6 +62,7 @@ export const createSongFile = async (
 	let file = app.vault.getFileByPath(filePath);
 
 	if (!file) {
+		console.log("song file not exist, creating");
 		file = await app.vault.create(filePath, "");
 		/* edit frontmatter for https://github.com/snezhig/obsidian-front-matter-title
 		 * this is to change the file display title, since the title is a unique spotify id
@@ -91,6 +99,7 @@ export const logSong = async (
 	folderPath: string,
 	input: string,
 	currentlyPlaying: PlaybackState,
+	blockId?: string,
 ) => {
 	const track = processCurrentlyPlayingResponse(currentlyPlaying);
 
@@ -107,7 +116,7 @@ export const logSong = async (
 	const file = await createSongFile(app, folderPath, track);
 	const filePath = file.path;
 
-	await appendInput(app, filePath, input, track.progress);
+	await appendInput(app, filePath, input, track.progress, blockId);
 
 	// if file is currently active, don't open file
 	const activeFile = app.workspace.getActiveFile();

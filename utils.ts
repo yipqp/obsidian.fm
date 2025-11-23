@@ -33,3 +33,15 @@ export const formatMs = (ms: string) => {
 
 	return msFormatted;
 };
+
+export const generateBlockID = (idLen: number): string => {
+	const chars =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	let id = "";
+
+	for (let i = 0; i < idLen; i++) {
+		id += chars[Math.floor(Math.random() * chars.length)];
+	}
+
+	return id;
+};
