@@ -1,5 +1,5 @@
 import { processCurrentlyPlayingResponse } from "api";
-import { App, normalizePath, moment } from "obsidian";
+import { App, normalizePath, moment, MarkdownView } from "obsidian";
 import { PlaybackState, TrackFormatted, TrackItem } from "types";
 
 const formatInput = (
@@ -36,17 +36,7 @@ export const appendInput = async (
 		return;
 	}
 	const formattedinput = formatInput(input, progress, blockId, referenceLink);
-	app.vault.append(file, formattedinput);
-
-	// const view = app.workspace.getActiveViewOfType(MarkdownView);
-	// if (view) {
-	// 	const editor = view.editor;
-	// 	editor.replaceRange(formattedinput, {
-	// 		line: editor.lastLine() + 1,
-	// 		ch: 0,
-	// 	});
-	// 	editor.setCursor(editor.lastLine() - 1);
-	// }
+	await app.vault.append(file, formattedinput);
 };
 
 // creates new song file in folder path if not exist
@@ -123,5 +113,16 @@ export const logSong = async (
 
 	if (!activeFile || activeFile.path != filePath) {
 		await app.workspace.getLeaf().openFile(file); //TODO: move this to different file?
+	}
+
+	const editor = app.workspace.activeEditor?.editor;
+
+	if (editor) {
+		// if the file to log is the currently active file
+		// then editor.lastLine() will not be updated in time even after we append
+		// after await read(file) or sleep(10), the line count will be correct
+		// unaware of better solution
+		await app.vault.cachedRead(file);
+		editor.setCursor({ line: editor.lastLine(), ch: 0 });
 	}
 };
