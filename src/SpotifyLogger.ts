@@ -1,12 +1,12 @@
-import { processCurrentlyPlayingResponse } from "api";
-import { App, normalizePath, moment, MarkdownView } from "obsidian";
-import { PlaybackState, TrackFormatted, TrackItem } from "types";
+import { processCurrentlyPlayingResponse } from "src/api";
+import { App, normalizePath, moment } from "obsidian";
+import { PlaybackState, TrackFormatted } from "types";
 
 const formatInput = (
 	input: String,
 	progress: string,
 	blockId?: string,
-	referenceLink?: string,
+	referenceLink?: string
 ) => {
 	const date = moment().format("D MMM YYYY, h:mma");
 	const surroundChar = "**";
@@ -28,7 +28,7 @@ export const appendInput = async (
 	input: string,
 	progress: string,
 	blockId?: string,
-	referenceLink?: string,
+	referenceLink?: string
 ) => {
 	const file = app.vault.getFileByPath(filePath);
 	if (!file) {
@@ -44,7 +44,7 @@ export const appendInput = async (
 export const createSongFile = async (
 	app: App,
 	folderPath: string,
-	track: TrackFormatted,
+	track: TrackFormatted
 ) => {
 	const filePath = normalizePath(folderPath + "/" + track.id + ".md");
 
@@ -89,7 +89,7 @@ export const logSong = async (
 	folderPath: string,
 	input: string,
 	currentlyPlaying: PlaybackState,
-	blockId?: string,
+	blockId?: string
 ) => {
 	const track = processCurrentlyPlayingResponse(currentlyPlaying);
 
@@ -108,7 +108,7 @@ export const logSong = async (
 
 	await appendInput(app, filePath, input, track.progress, blockId);
 
-	// if file is currently active, don't open file
+	// if file is currently active, don't open
 	const activeFile = app.workspace.getActiveFile();
 
 	if (!activeFile || activeFile.path != filePath) {

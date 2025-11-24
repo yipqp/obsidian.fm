@@ -7,7 +7,6 @@ If your plugin does not need CSS, delete this file.
 
 */
 
-
 .spotify-log-modal-content-container { 
 	display: flex;
 	flex-flow: column;
@@ -18,7 +17,7 @@ If your plugin does not need CSS, delete this file.
 	display: flex;
 	justify-content: space-between;
 }
- 
+
 /* make input take full width */
 
 .spotify-log-modal-input {

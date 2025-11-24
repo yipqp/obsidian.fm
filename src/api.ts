@@ -1,9 +1,14 @@
 // pkce reference: https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow
 
 import { Notice, ObsidianProtocolData } from "obsidian";
-import { PlaybackState, Track, TrackItem, TrackFormatted } from "types";
+import { PlaybackState, Track, TrackFormatted } from "types";
 import { URLSearchParams } from "url";
-import { generateRandomString, sha256, base64encode, formatMs } from "utils";
+import {
+	generateRandomString,
+	sha256,
+	base64encode,
+	formatMs,
+} from "src/utils";
 
 const clientId = "44e32ffa3b9c46398637431d6808481d";
 const redirectUri = "obsidian://spotify-auth";
@@ -33,12 +38,14 @@ export const getAuthUrl = async () => {
 const setTokens = (
 	accessToken: string,
 	expiresIn: number,
-	refreshToken: string | null,
+	refreshToken: string | null
 ) => {
 	const expiration = Date.now() + expiresIn * 1000; // expiresIn is in seconds from now
 	localStorage.setItem("expires_in", expiration.toString());
 	console.log(
-		`setting new expiration date to: ${new Date(expiration).toLocaleString()}`,
+		`setting new expiration date to: ${new Date(
+			expiration
+		).toLocaleString()}`
 	);
 
 	localStorage.setItem("access_token", accessToken);
@@ -77,7 +84,7 @@ export const requestToken = async (code: string) => {
 	setTokens(
 		response.access_token,
 		response.expires_in,
-		response.refresh_token,
+		response.refresh_token
 	);
 	return response;
 };
@@ -109,7 +116,7 @@ const refreshTokens = async () => {
 	setTokens(
 		response.access_token,
 		response.expires_in,
-		response.refresh_token,
+		response.refresh_token
 	);
 
 	return response;
@@ -136,7 +143,9 @@ const getAccessToken = async () => {
 
 	if (Date.now() >= expiration) {
 		console.log(
-			`requesting new token. old expiration date: ${new Date(expiration).toLocaleString()}`,
+			`requesting new token. old expiration date: ${new Date(
+				expiration
+			).toLocaleString()}`
 		);
 		await refreshTokens();
 	}
@@ -166,7 +175,7 @@ export const getCurrentlyPlayingTrack = async () => {
 			headers: {
 				Authorization: "Bearer " + accessToken,
 			},
-		},
+		}
 	);
 
 	if (response.status === 204) {
@@ -224,7 +233,7 @@ export const searchTrack = async (query: string) => {
 };
 
 export const processCurrentlyPlayingResponse = (
-	playbackState: PlaybackState,
+	playbackState: PlaybackState
 ) => {
 	if (playbackState.item.kind === "episode") {
 		return null;

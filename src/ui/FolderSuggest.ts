@@ -25,7 +25,7 @@ export class FolderSuggest extends AbstractInputSuggest<string> {
 
 	selectSuggestion(value: string, evt: MouseEvent | KeyboardEvent): void {
 		this.setValue(value);
-		super.selectSuggestion(value, evt); // need this to invoke the onSelect callbac
+		super.selectSuggestion(value, evt); // need this to invoke the onSelect callback
 		this.close();
 	}
 }

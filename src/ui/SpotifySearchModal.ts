@@ -1,6 +1,6 @@
 import { App, debounce, Debouncer, Notice, SuggestModal } from "obsidian";
-import { processTrack, searchTrack } from "api";
-import { Image, Track, TrackFormatted, Tracks } from "types";
+import { processTrack, searchTrack } from "src/api";
+import { Track, TrackFormatted } from "types";
 
 export class SpotifySearchModal extends SuggestModal<TrackFormatted> {
 	isLoading: boolean;
@@ -26,13 +26,7 @@ export class SpotifySearchModal extends SuggestModal<TrackFormatted> {
 
 				console.log("calling search api");
 
-				let data;
-
-				try {
-					data = await searchTrack(query);
-				} catch (err) {
-					throw err;
-				}
+				const data = await searchTrack(query);
 
 				if (!data) {
 					console.log("no data");
@@ -40,7 +34,7 @@ export class SpotifySearchModal extends SuggestModal<TrackFormatted> {
 				}
 
 				const tracks: TrackFormatted[] = data.tracks.items.map(
-					(track: Track) => processTrack(track),
+					(track: Track) => processTrack(track)
 				);
 
 				// console.log(JSON.stringify(tracks, null, 2));
@@ -48,14 +42,13 @@ export class SpotifySearchModal extends SuggestModal<TrackFormatted> {
 				cb(tracks);
 			},
 			300,
-			true,
+			true
 		);
 	}
 
 	// called when input is changed
 	// reference: https://github.com/bbawj/obsidian-semantic-search/blob/45e2cc2e10b78bcc357287a4abc22a81df7ce36d/src/ui/linkSuggest.ts#L45
 	async getSuggestions(query: string): Promise<TrackFormatted[]> {
-		//TODO: handle not authenticated. ideally in main before opening this modal?
 		this.isLoading = true;
 		return new Promise((resolve) => {
 			this.searchDebouncer(query, (query) => {
@@ -84,7 +77,7 @@ export class SpotifySearchModal extends SuggestModal<TrackFormatted> {
 
 	async onChooseSuggestion(
 		track: TrackFormatted,
-		evt: MouseEvent | KeyboardEvent,
+		evt: MouseEvent | KeyboardEvent
 	) {
 		new Notice(`Selected ${track.name}`);
 		await this.cb(track);
