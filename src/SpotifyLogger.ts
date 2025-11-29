@@ -1,21 +1,20 @@
-import { processCurrentlyPlayingResponse } from "src/api";
 import { App, normalizePath, moment } from "obsidian";
-import { PlaybackState, TrackFormatted } from "types";
+import { AlbumFormatted, TrackFormatted, PlayingType } from "types";
 
 const formatInput = (
 	input: String,
-	progress: string,
+	type: PlayingType,
+	progress?: string,
 	blockId?: string,
-	referenceLink?: string
+	referenceLink?: string,
 ) => {
 	const date = moment().format("D MMM YYYY, h:mma");
 	const surroundChar = "**";
+	const trackBottomLine = `\n*${referenceLink ? `${referenceLink}, ` : ""}${progress ?? ""}*\n`;
 	const formattedinput = `${surroundChar}${date}${surroundChar}
 
 ${input} ${blockId ? `^${blockId}` : ""}
-
-*${referenceLink ? `${referenceLink}, ` : ""}${progress}*
-
+${type === "Track" ? trackBottomLine : ""}
 ---
 
 `;
@@ -25,88 +24,97 @@ ${input} ${blockId ? `^${blockId}` : ""}
 export const appendInput = async (
 	app: App,
 	filePath: string,
+	type: PlayingType,
 	input: string,
-	progress: string,
+	progress?: string,
 	blockId?: string,
-	referenceLink?: string
+	referenceLink?: string,
 ) => {
 	const file = app.vault.getFileByPath(filePath);
 	if (!file) {
 		console.log(`Error: file ${filePath} could not be found`);
 		return;
 	}
-	const formattedinput = formatInput(input, progress, blockId, referenceLink);
+	const formattedinput = formatInput(
+		input,
+		type,
+		progress,
+		blockId,
+		referenceLink,
+	);
 	await app.vault.append(file, formattedinput);
 };
 
-// creates new song file in folder path if not exist
-// returns the song file
-export const createSongFile = async (
+// creates new track / album file in folder path if not exist, and return it
+export const createPlayingFile = async (
 	app: App,
 	folderPath: string,
-	track: TrackFormatted
+	playing: TrackFormatted | AlbumFormatted,
 ) => {
-	const filePath = normalizePath(folderPath + "/" + track.id + ".md");
+	const filePath = normalizePath(folderPath + "/" + playing.id + ".md");
 
 	// check if file exists
 	let file = app.vault.getFileByPath(filePath);
+	if (file) {
+		return file;
+	}
 
-	if (!file) {
-		console.log("song file not exist, creating");
-		file = await app.vault.create(filePath, "");
-		/* edit frontmatter for https://github.com/snezhig/obsidian-front-matter-title
-		 * this is to change the file display title, since the title is a unique spotify id
-		 */
-		try {
+	console.log("file does not exist, creating");
+	file = await app.vault.create(filePath, "");
+	/* edit frontmatter for https://github.com/snezhig/obsidian-front-matter-title
+	 * this is to change the file display title, since the title is a unique spotify id
+	 */
+	try {
+		if (playing.type === "Track") {
 			app.fileManager.processFrontMatter(file, (frontmatter) => {
-				frontmatter["title"] = track.name; // TODO: let user change which frontmatter should reflect display title?
-				frontmatter["artists"] = track.artists;
-				frontmatter["album"] = track.album;
-				frontmatter["duration"] = track.duration;
-				// frontmatter["log count"] = 1;
-				frontmatter["aliases"] = track.name;
+				frontmatter["title"] = playing.name; // TODO: let user change which frontmatter should reflect display title?
+				frontmatter["artists"] = playing.artists;
+				frontmatter["type"] = playing.type;
+				frontmatter["album"] = playing.album;
+				frontmatter["duration"] = playing.duration;
+				frontmatter["aliases"] = playing.name;
 			});
-		} catch (e) {
-			console.log(`Error: ${e}`);
+		} else {
+			// is album
+			app.fileManager.processFrontMatter(file, (frontmatter) => {
+				frontmatter["title"] = playing.name;
+				frontmatter["artists"] = playing.artists;
+				frontmatter["type"] = playing.type;
+				frontmatter["release date"] = playing.releaseDate;
+				frontmatter["duration"] = playing.duration;
+				frontmatter["aliases"] = playing.name;
+			});
 		}
-	} // else {
-	// 	try {
-	// 		app.fileManager.processFrontMatter(
-	// 			file,
-	// 			(frontmatter) => (frontmatter["log count"] += 1),
-	// 		);
-	// 		await new Promise((r) => setTimeout(r, 10)); // TODO: find a different workaround?? this was added to prevent "note modified externally, merging changes automatically"
-	// 	} catch (e) {
-	// 		console.log(`Error: ${e}`);
-	// 	}
-	// }
+	} catch (e) {
+		console.log(`Error: ${e}`);
+	}
 
 	return file;
 };
 
-export const logSong = async (
+export const logPlaying = async (
 	app: App,
 	folderPath: string,
 	input: string,
-	currentlyPlaying: PlaybackState,
-	blockId?: string
+	playing: TrackFormatted | AlbumFormatted | undefined,
+	blockId?: string,
 ) => {
-	const track = processCurrentlyPlayingResponse(currentlyPlaying);
-
-	if (!track) {
+	if (!playing) {
 		console.log("error processing playback state");
 		return null;
 	}
 
-	if (!track.progress) {
-		console.log("no track progress?");
-		track.progress = ""; //TODO: handle no progress (not currently playing)
-	}
-
-	const file = await createSongFile(app, folderPath, track);
+	const file = await createPlayingFile(app, folderPath, playing);
 	const filePath = file.path;
 
-	await appendInput(app, filePath, input, track.progress, blockId);
+	let progress;
+	if ("progress" in playing) {
+		progress = playing.progress;
+	} else {
+		progress = undefined;
+	}
+
+	await appendInput(app, filePath, playing.type, input, progress, blockId);
 
 	// if file is currently active, don't open
 	const activeFile = app.workspace.getActiveFile();

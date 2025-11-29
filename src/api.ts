@@ -1,7 +1,17 @@
 // pkce reference: https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow
 
 import { Notice, ObsidianProtocolData } from "obsidian";
-import { PlaybackState, Track, TrackFormatted } from "types";
+import {
+	Album,
+	AlbumFormatted,
+	Artists,
+	PlaybackState,
+	PlayingType,
+	SimplifiedArtist,
+	SimplifiedTrack,
+	Track,
+	TrackFormatted,
+} from "types";
 import { URLSearchParams } from "url";
 import {
 	generateRandomString,
@@ -38,14 +48,14 @@ export const getAuthUrl = async () => {
 const setTokens = (
 	accessToken: string,
 	expiresIn: number,
-	refreshToken: string | null
+	refreshToken: string | null,
 ) => {
 	const expiration = Date.now() + expiresIn * 1000; // expiresIn is in seconds from now
 	localStorage.setItem("expires_in", expiration.toString());
 	console.log(
 		`setting new expiration date to: ${new Date(
-			expiration
-		).toLocaleString()}`
+			expiration,
+		).toLocaleString()}`,
 	);
 
 	localStorage.setItem("access_token", accessToken);
@@ -84,7 +94,7 @@ export const requestToken = async (code: string) => {
 	setTokens(
 		response.access_token,
 		response.expires_in,
-		response.refresh_token
+		response.refresh_token,
 	);
 	return response;
 };
@@ -116,7 +126,7 @@ const refreshTokens = async () => {
 	setTokens(
 		response.access_token,
 		response.expires_in,
-		response.refresh_token
+		response.refresh_token,
 	);
 
 	return response;
@@ -144,8 +154,8 @@ const getAccessToken = async () => {
 	if (Date.now() >= expiration) {
 		console.log(
 			`requesting new token. old expiration date: ${new Date(
-				expiration
-			).toLocaleString()}`
+				expiration,
+			).toLocaleString()}`,
 		);
 		await refreshTokens();
 	}
@@ -175,7 +185,7 @@ export const getCurrentlyPlayingTrack = async () => {
 			headers: {
 				Authorization: "Bearer " + accessToken,
 			},
-		}
+		},
 	);
 
 	if (response.status === 204) {
@@ -232,27 +242,88 @@ export const searchTrack = async (query: string) => {
 	return data;
 };
 
-export const processCurrentlyPlayingResponse = (
-	playbackState: PlaybackState
+const callEndpoint = async (url: string) => {
+	//TODO: use in each api call
+	if (!isAuthenticated()) {
+		throw new Error("Please connect your spotify account");
+	}
+
+	const accessToken = (await getAccessToken()) ?? "";
+
+	const response = await fetch(url.toString(), {
+		headers: {
+			Authorization: "Bearer " + accessToken,
+		},
+	});
+
+	const data = await response.json();
+
+	if (data.error) {
+		if (data.error.status === 400) {
+			throw new Error("Please connect your spotify account");
+		}
+		throw new Error(data.error.message);
+	}
+
+	return data;
+};
+
+export const processCurrentlyPlayingResponse = async (
+	//TODO: await this
+	playbackState: PlaybackState,
+	type: PlayingType,
 ) => {
 	if (playbackState.item.kind === "episode") {
 		return null;
 	}
-	const trackInfo = processTrack(playbackState.item);
-	trackInfo.progress = formatMs(playbackState.progress_ms.toString());
-	return trackInfo;
+	if (type === "Track") {
+		const trackInfo = processTrack(playbackState.item);
+		trackInfo.progress = formatMs(playbackState.progress_ms.toString());
+		return trackInfo;
+	}
+	if (type === "Album") {
+		const album = await callEndpoint(playbackState.item.album.href);
+		const albumInfo = processAlbum(album);
+		return albumInfo;
+	}
+	return null;
+};
+
+const formatArtists = (artists: SimplifiedArtist[]) => {
+	return artists.map((artist) => artist.name).join(", ");
+};
+
+const getAlbumLength = (album: Album) => {
+	let length = 0;
+	for (const track of album.tracks.items) {
+		length += track.duration_ms;
+	}
+	return formatMs(length.toString());
 };
 
 // returns object with relevant information about the playing track
-export const processTrack = (track: Track) => {
-	const songInfo: TrackFormatted = {
+export const processTrack = (track: Track): TrackFormatted => {
+	return {
+		type: "Track",
 		album: track.album.name,
 		albumid: track.album.id,
-		artists: track.artists.map((artist) => artist.name).join(", "),
+		artists: formatArtists(track.artists),
 		id: track.id,
 		name: track.name,
 		image: track.album.images[track.album.images.length - 1],
 		duration: formatMs(track.duration_ms.toString()),
 	};
-	return songInfo;
+};
+
+export const processAlbum = (album: Album): AlbumFormatted => {
+	return {
+		type: "Album",
+		image: album.images[album.images.length - 1],
+		artists: formatArtists(album.artists),
+		releaseDate: album.release_date,
+		release_date_precision: album.release_date_precision,
+		id: album.id,
+		name: album.name,
+		duration: getAlbumLength(album),
+	};
 };

@@ -1,30 +1,71 @@
 import { Notice } from "obsidian";
 import { SpotifyLogModal } from "./ui/SpotifyLogModal";
-import { logSong } from "src/SpotifyLogger";
+import { logPlaying } from "src/SpotifyLogger";
 import { SpotifySearchModal } from "./ui/SpotifySearchModal";
-import { getAuthUrl, getCurrentlyPlayingTrack, isAuthenticated } from "./api";
+import {
+	getAuthUrl,
+	getCurrentlyPlayingTrack,
+	isAuthenticated,
+	processCurrentlyPlayingResponse,
+} from "./api";
 import SpotifyLogger from "./main";
+import { AlbumFormatted, TrackFormatted } from "types";
 
 export function registerCommands(plugin: SpotifyLogger) {
 	plugin.addCommand({
 		id: "log-currently-playing-track",
-		name: "Log current playing track",
+		name: "Log currently playing track",
 		callback: async () => {
 			try {
 				const currentlyPlaying = await getCurrentlyPlayingTrack();
+				const track = (await processCurrentlyPlayingResponse(
+					currentlyPlaying,
+					"Track",
+				)) as TrackFormatted;
 				new SpotifyLogModal(
 					plugin.app,
-					currentlyPlaying,
+					track,
 					plugin.settings.spotifyLoggerFolderPath,
 					async (input: string, blockId: string) => {
-						await logSong(
+						await logPlaying(
 							plugin.app,
 							plugin.settings.spotifyLoggerFolderPath,
 							input,
-							currentlyPlaying,
-							blockId
+							track,
+							blockId,
 						);
-					}
+					},
+				).open();
+			} catch (err) {
+				const message = `[Spotify Logger] Error: ${err.message}`;
+				new Notice(`${message}`, 3000);
+			}
+		},
+	});
+
+	plugin.addCommand({
+		id: "log-currently-playing-album",
+		name: "Log currently playing album",
+		callback: async () => {
+			try {
+				const currentlyPlaying = await getCurrentlyPlayingTrack();
+				const album = (await processCurrentlyPlayingResponse(
+					currentlyPlaying,
+					"Album",
+				)) as AlbumFormatted;
+				new SpotifyLogModal(
+					plugin.app,
+					album,
+					plugin.settings.spotifyLoggerFolderPath,
+					async (input: string, blockId: string) => {
+						await logPlaying(
+							plugin.app,
+							plugin.settings.spotifyLoggerFolderPath,
+							input,
+							album,
+							blockId,
+						);
+					},
 				).open();
 			} catch (err) {
 				const message = `[Spotify Logger] Error: ${err.message}`;

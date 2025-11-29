@@ -1,17 +1,16 @@
-import { processCurrentlyPlayingResponse, isAuthenticated } from "src/api";
+import { isAuthenticated } from "src/api";
 import { App, ButtonComponent, Modal, TextComponent, Notice } from "obsidian";
-import { appendInput, createSongFile } from "src/SpotifyLogger";
-import { PlaybackState, TrackFormatted } from "types";
-import { generateBlockID, parseTrackAsWikilink } from "src/utils";
+import { appendInput, createPlayingFile } from "src/SpotifyLogger";
+import { AlbumFormatted, TrackFormatted } from "types";
+import { generateBlockID, parsePlayingAsWikilink } from "src/utils";
 import { SpotifySearchModal } from "./SpotifySearchModal";
 
 export class SpotifyLogModal extends Modal {
 	public app: App;
-	private currentlyPlaying: PlaybackState;
 	private folderPath: string;
 	private onSubmit: (input: string, blockId?: string) => void;
 	private blockId: string | null;
-	private track: TrackFormatted | null;
+	private playing: TrackFormatted | AlbumFormatted | null;
 	private input = "";
 	private handleSubmit = () => {
 		this.onSubmit(this.input, this.blockId ?? undefined);
@@ -19,62 +18,61 @@ export class SpotifyLogModal extends Modal {
 		this.close();
 	};
 	private handleChooseSuggestion = async (
-		track: TrackFormatted,
-		textComponent: TextComponent
+		track: TrackFormatted, // TODO: edit to handle albums
+		textComponent: TextComponent,
 	) => {
-		if (!this.track || !this.track.progress) {
-			//TODO: better handling
-			console.log("cur track not available");
-			return;
-		}
-
+		if (!this.playing) return;
 		console.log("searching from log modal");
 
-		const songFile = await createSongFile(this.app, this.folderPath, track);
+		const songFile = await createPlayingFile(
+			this.app,
+			this.folderPath,
+			track,
+		);
 
-		const refTrackMdLink = parseTrackAsWikilink(track);
+		const refTrackMdLink = parsePlayingAsWikilink(track);
 
 		textComponent.setValue(textComponent.getValue() + refTrackMdLink);
 		this.input = textComponent.getValue();
 
 		this.blockId = generateBlockID(6);
 
-		const curBlockMdLink = parseTrackAsWikilink(
-			this.track,
+		const curBlockMdLink = parsePlayingAsWikilink(
+			this.playing,
 			true,
-			this.blockId
+			this.blockId,
 		);
 
-		const curTrackMdLink = parseTrackAsWikilink(this.track);
+		const curTrackMdLink = parsePlayingAsWikilink(this.playing);
 
 		appendInput(
 			this.app,
 			songFile.path,
+			"Track",
 			curBlockMdLink,
-			this.track.progress,
+			this.playing.type === "Track" ? this.playing.progress : "",
 			"",
-			curTrackMdLink
+			curTrackMdLink,
 		);
 	};
 	constructor(
 		app: App,
-		currentlyPlaying: PlaybackState,
+		currentlyPlaying: TrackFormatted | AlbumFormatted,
 		folderPath: string,
-		onSubmit: (input: string, blockId?: string) => void
+		onSubmit: (input: string, blockId?: string) => void,
 	) {
 		super(app);
 		this.app = app;
-		this.currentlyPlaying = currentlyPlaying;
+		this.playing = currentlyPlaying;
 		this.folderPath = folderPath;
 		this.onSubmit = onSubmit;
-		this.track = processCurrentlyPlayingResponse(this.currentlyPlaying);
 
-		if (!this.track) {
+		if (!this.playing) {
 			console.log("is episode"); //TODO: Handle episode
 			return;
 		}
 
-		const title = `${this.track.artists} - ${this.track.name}`;
+		const title = `${this.playing.artists} - ${this.playing.name}`;
 		this.setTitle(title);
 
 		this.contentEl.addClass("spotify-log-modal-content-container");
@@ -93,12 +91,12 @@ export class SpotifyLogModal extends Modal {
 		});
 
 		this.contentEl.createEl("div", {
-			text: this.track.progress,
+			text: this.playing.type === "Track" ? this.playing.progress : "",
 			cls: "spotify-log-modal-progress",
 		});
 
 		const buttonContainer = this.contentEl.createDiv(
-			"spotify-log-modal-button-container"
+			"spotify-log-modal-button-container",
 		);
 
 		const onChooseSuggestionCb = async (track: TrackFormatted) => {

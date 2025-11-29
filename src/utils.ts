@@ -1,5 +1,5 @@
 import { moment } from "obsidian";
-import { TrackFormatted } from "types";
+import { AlbumFormatted, TrackFormatted } from "types";
 
 export const generateRandomString = (length: number) => {
 	const possible =
@@ -47,12 +47,12 @@ export const generateBlockID = (idLen: number): string => {
 	return id;
 };
 
-export const parseTrackAsWikilink = (
-	track: TrackFormatted,
+export const parsePlayingAsWikilink = (
+	playing: TrackFormatted | AlbumFormatted,
 	embedLinkedContent?: boolean,
 	blockId?: string,
 ): string => {
 	const prefix = embedLinkedContent ? "!" : "";
 	const blockIdFormatted = blockId ? `#^${blockId}` : "";
-	return `${prefix}[[${track.id}${blockIdFormatted}|${track.name}]]`;
+	return `${prefix}[[${playing.id}${blockIdFormatted}|${playing.name}]]`;
 };

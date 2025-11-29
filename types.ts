@@ -1,11 +1,7 @@
-export interface Song {
-	name: string;
-	artists: string[];
-	id: string;
-	image: Image;
-}
+export type PlayingType = "Track" | "Album";
 
 export interface TrackFormatted {
+	type: "Track";
 	album: string;
 	albumid: string;
 	image: Image;
@@ -14,6 +10,17 @@ export interface TrackFormatted {
 	name: string;
 	duration: string;
 	progress?: string;
+}
+
+export interface AlbumFormatted {
+	type: "Album";
+	image: Image;
+	artists: string;
+	releaseDate: string;
+	release_date_precision: string;
+	id: string;
+	name: string;
+	duration: string;
 }
 
 // Configuration types
