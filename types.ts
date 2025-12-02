@@ -20,9 +20,16 @@ export interface AlbumFormatted {
 	release_date_precision: string;
 	id: string;
 	name: string;
+	tracks: TrackFormatted[];
 	duration: string;
 }
 
+export type TrackLike = Pick<
+	Track,
+	"artists" | "id" | "name" | "duration_ms"
+> & {
+	album: Pick<Track["album"], "name" | "id" | "images">;
+};
 // Configuration types
 // https://github.com/spotify/spotify-web-api-ts-sdk/blob/main/src/types.ts
 

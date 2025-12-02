@@ -11,6 +11,7 @@ import {
 	SimplifiedTrack,
 	Track,
 	TrackFormatted,
+	TrackLike,
 } from "types";
 import { URLSearchParams } from "url";
 import {
@@ -18,6 +19,7 @@ import {
 	sha256,
 	base64encode,
 	formatMs,
+	parsePlayingAsWikilink,
 } from "src/utils";
 
 const clientId = "44e32ffa3b9c46398637431d6808481d";
@@ -268,6 +270,12 @@ const callEndpoint = async (url: string) => {
 	return data;
 };
 
+export const tracksAsWikilinks = (
+	tracks: SimplifiedTrack[] | TrackFormatted[],
+) => {
+	return tracks.map((track) => parsePlayingAsWikilink(track));
+};
+
 export const processCurrentlyPlayingResponse = async (
 	//TODO: await this
 	playbackState: PlaybackState,
@@ -302,7 +310,7 @@ const getAlbumLength = (album: Album) => {
 };
 
 // returns object with relevant information about the playing track
-export const processTrack = (track: Track): TrackFormatted => {
+export const processTrack = (track: TrackLike): TrackFormatted => {
 	return {
 		type: "Track",
 		album: track.album.name,
@@ -324,6 +332,16 @@ export const processAlbum = (album: Album): AlbumFormatted => {
 		release_date_precision: album.release_date_precision,
 		id: album.id,
 		name: album.name,
+		tracks: album.tracks.items.map((simplifiedTrack) =>
+			processTrack({
+				...simplifiedTrack,
+				album: {
+					name: album.name,
+					id: album.id,
+					images: album.images,
+				},
+			}),
+		),
 		duration: getAlbumLength(album),
 	};
 };

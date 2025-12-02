@@ -50,7 +50,6 @@ export class SpotifyLogModal extends Modal {
 			songFile.path,
 			"Track",
 			curBlockMdLink,
-			this.playing.type === "Track" ? this.playing.progress : "",
 			"",
 			curTrackMdLink,
 		);

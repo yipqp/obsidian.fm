@@ -1,5 +1,6 @@
 import { App, normalizePath, moment } from "obsidian";
 import { AlbumFormatted, TrackFormatted, PlayingType } from "types";
+import { tracksAsWikilinks } from "./api";
 
 const formatInput = (
 	input: String,
@@ -74,14 +75,15 @@ export const createPlayingFile = async (
 				frontmatter["duration"] = playing.duration;
 				frontmatter["aliases"] = playing.name;
 			});
-		} else {
-			// is album
+		}
+		if (playing.type === "Album") {
 			app.fileManager.processFrontMatter(file, (frontmatter) => {
 				frontmatter["title"] = playing.name;
 				frontmatter["artists"] = playing.artists;
 				frontmatter["type"] = playing.type;
 				frontmatter["release date"] = playing.releaseDate;
 				frontmatter["duration"] = playing.duration;
+				frontmatter["tracks"] = tracksAsWikilinks(playing.tracks);
 				frontmatter["aliases"] = playing.name;
 			});
 		}
@@ -105,6 +107,11 @@ export const logPlaying = async (
 	}
 
 	const file = await createPlayingFile(app, folderPath, playing);
+	if (playing.type === "Album") {
+		for (const track of playing.tracks) {
+			createPlayingFile(app, folderPath, track);
+		}
+	}
 	const filePath = file.path;
 
 	let progress;
