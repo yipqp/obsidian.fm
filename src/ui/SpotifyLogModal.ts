@@ -45,12 +45,17 @@ export class SpotifyLogModal extends Modal {
 
 		const curTrackMdLink = parsePlayingAsWikilink(this.playing);
 
-		appendInput(
+		let progress;
+		if ("progress" in this.playing) {
+			progress = this.playing.progress;
+		}
+
+		await appendInput(
 			this.app,
 			songFile.path,
-			"Track",
 			curBlockMdLink,
-			"",
+			progress,
+			undefined,
 			curTrackMdLink,
 		);
 	};
