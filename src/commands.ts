@@ -12,6 +12,23 @@ import SpotifyLogger from "./main";
 import { AlbumFormatted, TrackFormatted } from "types";
 
 export function registerCommands(plugin: SpotifyLogger) {
+	const searchTrackCb = async (track: TrackFormatted) => {
+		new SpotifyLogModal(
+			plugin.app,
+			track,
+			plugin.settings.spotifyLoggerFolderPath,
+			async (input: string, blockId: string) => {
+				await logPlaying(
+					plugin.app,
+					plugin.settings.spotifyLoggerFolderPath,
+					input,
+					track,
+					blockId,
+				);
+			},
+		).open();
+	};
+
 	plugin.addCommand({
 		id: "log-currently-playing-track",
 		name: "Log currently playing track",
@@ -96,7 +113,7 @@ export function registerCommands(plugin: SpotifyLogger) {
 				new Notice("Please connect your Spotify account", 3000);
 				return;
 			}
-			new SpotifySearchModal(plugin.app).open(); //TODO: REMOVE THIS OR ADD THE SECOND PARAM
+			new SpotifySearchModal(plugin.app, searchTrackCb).open();
 		},
 	});
 	plugin.addCommand({

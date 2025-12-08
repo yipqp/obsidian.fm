@@ -4,18 +4,35 @@ import { tracksAsWikilinks } from "./api";
 
 const formatInput = (
 	input: String,
-	type: PlayingType,
-	progress?: string,
+	progress: string,
 	blockId?: string,
 	referenceLink?: string,
 ) => {
 	const date = moment().format("D MMM YYYY, h:mma");
 	const surroundChar = "**";
-	const trackBottomLine = `\n*${referenceLink ? `${referenceLink}, ` : ""}${progress ?? ""}*\n`;
 	const formattedinput = `${surroundChar}${date}${surroundChar}
 
 ${input} ${blockId ? `^${blockId}` : ""}
-${type === "Track" ? trackBottomLine : ""}
+
+*${referenceLink ? `${referenceLink}, ` : ""}${progress}*
+
+---
+
+`;
+	return formattedinput;
+};
+
+const formatInputNoTimestamp = (
+	input: String,
+	blockId?: string,
+	referenceLink?: string,
+) => {
+	const date = moment().format("D MMM YYYY, h:mma");
+	const surroundChar = "**";
+	const formattedinput = `${surroundChar}${date}${surroundChar}
+
+${input} ${blockId ? `^${blockId}` : ""}
+${referenceLink ? `\n${referenceLink}\n` : ""}
 ---
 
 `;
@@ -25,7 +42,6 @@ ${type === "Track" ? trackBottomLine : ""}
 export const appendInput = async (
 	app: App,
 	filePath: string,
-	type: PlayingType,
 	input: string,
 	progress?: string,
 	blockId?: string,
@@ -36,13 +52,12 @@ export const appendInput = async (
 		console.log(`Error: file ${filePath} could not be found`);
 		return;
 	}
-	const formattedinput = formatInput(
-		input,
-		type,
-		progress,
-		blockId,
-		referenceLink,
-	);
+	let formattedinput = "";
+	if (progress) {
+		formattedinput = formatInput(input, progress, blockId, referenceLink);
+	} else {
+		formattedinput = formatInputNoTimestamp(input, blockId, referenceLink);
+	}
 	await app.vault.append(file, formattedinput);
 };
 
@@ -121,7 +136,7 @@ export const logPlaying = async (
 		progress = undefined;
 	}
 
-	await appendInput(app, filePath, playing.type, input, progress, blockId);
+	await appendInput(app, filePath, input, progress, blockId);
 
 	// if file is currently active, don't open
 	const activeFile = app.workspace.getActiveFile();
