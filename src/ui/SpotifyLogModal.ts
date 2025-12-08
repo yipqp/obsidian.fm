@@ -22,6 +22,10 @@ export class SpotifyLogModal extends Modal {
 		textComponent: TextComponent,
 	) => {
 		if (!this.playing) return;
+		if (this.playing.id === track.id) {
+			new Notice("Error: cannot reference self");
+			return;
+		}
 		console.log("searching from log modal");
 
 		const songFile = await createPlayingFile(
