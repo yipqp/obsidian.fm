@@ -125,7 +125,7 @@ export const createTrackFile = async (
 	let albumWikilink: string = "";
 	const albumFile = getFile(app, folderPath, playing.albumid);
 	if (albumFile) {
-		albumWikilink = `[[${playing.albumid}|${playing.name}]]`;
+		albumWikilink = `[[${playing.albumid}|${playing.album}]]`;
 	}
 
 	try {
