@@ -1,4 +1,4 @@
-import { moment } from "obsidian";
+import { App, moment, normalizePath, TFile } from "obsidian";
 import { AlbumFormatted, SimplifiedTrack, TrackFormatted } from "types";
 
 export const generateRandomString = (length: number) => {
@@ -55,4 +55,23 @@ export const parsePlayingAsWikilink = (
 	const prefix = embedLinkedContent ? "!" : "";
 	const blockIdFormatted = blockId ? `#^${blockId}` : "";
 	return `${prefix}[[${playing.id}${blockIdFormatted}|${playing.name}]]`;
+};
+
+export const getFilePath = (folderPath: string, id: string): string => {
+	return normalizePath(folderPath + "/" + id + ".md");
+};
+
+export const getFile = (
+	app: App,
+	folderPath: string,
+	id: string,
+): TFile | null => {
+	const filePath = getFilePath(folderPath, id);
+
+	let file = app.vault.getFileByPath(filePath);
+	if (file) {
+		return file;
+	}
+
+	return null;
 };

@@ -1,6 +1,7 @@
-import { App, normalizePath, moment, Notice } from "obsidian";
+import { App, normalizePath, moment, Notice, TFile } from "obsidian";
 import { AlbumFormatted, TrackFormatted, PlayingType } from "types";
 import { tracksAsWikilinks } from "./api";
+import { getFile, getFilePath } from "./utils";
 
 const formatInput = (
 	input: String,
@@ -61,62 +62,82 @@ export const appendInput = async (
 	await app.vault.append(file, formattedinput);
 };
 
-// creates new track / album file in folder path if not exist, and return it
-export const createPlayingFile = async (
+// create new album file in folder path if not exist, and return it
+export const createAlbumFile = async (
 	app: App,
 	folderPath: string,
-	playing: TrackFormatted | AlbumFormatted,
+	playing: AlbumFormatted,
+	logAlbumAlwaysCreateNewTrackFiles: boolean,
 ) => {
-	const filePath = normalizePath(folderPath + "/" + playing.id + ".md");
+	let file = getFile(app, folderPath, playing.id);
 
-	// check if file exists
-	let file = app.vault.getFileByPath(filePath);
 	if (file) {
 		return file;
 	}
 
-	console.log("file does not exist, creating");
+	const filePath = getFilePath(folderPath, playing.id);
+
 	file = await app.vault.create(filePath, "");
 	/* edit frontmatter for https://github.com/snezhig/obsidian-front-matter-title
 	 * this is to change the file display title, since the title is a unique spotify id
 	 */
 
+	try {
+		app.fileManager.processFrontMatter(file, (frontmatter) => {
+			frontmatter["title"] = playing.name;
+			frontmatter["artists"] = playing.artists;
+			frontmatter["type"] = playing.type;
+			frontmatter["release date"] = playing.releaseDate;
+			frontmatter["duration"] = playing.duration;
+			frontmatter["tracks"] = tracksAsWikilinks(
+				app,
+				folderPath,
+				playing.tracks,
+				logAlbumAlwaysCreateNewTrackFiles,
+			);
+			frontmatter["tags"] = "";
+			frontmatter["aliases"] = playing.name;
+		});
+	} catch (e) {
+		console.log(`Error: ${e}`);
+	}
+
+	return file;
+};
+
+// create new track file in folder path if not exist, and return it
+export const createTrackFile = async (
+	app: App,
+	folderPath: string,
+	playing: TrackFormatted,
+) => {
+	let file = getFile(app, folderPath, playing.id);
+
+	if (file) {
+		return file;
+	}
+
+	const filePath = getFilePath(folderPath, playing.id);
+
+	file = await app.vault.create(filePath, "");
+
 	// check: if album exists, then frontmatter[album] should link back to that album
 	let albumWikilink: string = "";
-	if (playing.type === "Track") {
-		const albumPath = normalizePath(
-			folderPath + "/" + playing.albumid + ".md",
-		);
-		const albumFile = app.vault.getFileByPath(albumPath);
-		if (albumFile) {
-			albumWikilink = `[[${playing.albumid}|${playing.name}]]`;
-		}
+	const albumFile = getFile(app, folderPath, playing.albumid);
+	if (albumFile) {
+		albumWikilink = `[[${playing.albumid}|${playing.name}]]`;
 	}
 
 	try {
-		if (playing.type === "Track") {
-			app.fileManager.processFrontMatter(file, (frontmatter) => {
-				frontmatter["title"] = playing.name; // TODO: let user change which frontmatter should reflect display title?
-				frontmatter["artists"] = playing.artists;
-				frontmatter["type"] = playing.type;
-				frontmatter["album"] = albumWikilink || playing.album;
-				frontmatter["duration"] = playing.duration;
-				frontmatter["tags"] = ""; //TODO: allow user to enable / disable which frontmatter shows up
-				frontmatter["aliases"] = playing.name;
-			});
-		}
-		if (playing.type === "Album") {
-			app.fileManager.processFrontMatter(file, (frontmatter) => {
-				frontmatter["title"] = playing.name;
-				frontmatter["artists"] = playing.artists;
-				frontmatter["type"] = playing.type;
-				frontmatter["release date"] = playing.releaseDate;
-				frontmatter["duration"] = playing.duration;
-				frontmatter["tracks"] = tracksAsWikilinks(playing.tracks);
-				frontmatter["tags"] = "";
-				frontmatter["aliases"] = playing.name;
-			});
-		}
+		app.fileManager.processFrontMatter(file, (frontmatter) => {
+			frontmatter["title"] = playing.name; // TODO: let user change which frontmatter should reflect display title?
+			frontmatter["artists"] = playing.artists;
+			frontmatter["type"] = playing.type;
+			frontmatter["album"] = albumWikilink || playing.album;
+			frontmatter["duration"] = playing.duration;
+			frontmatter["tags"] = ""; //TODO: allow user to enable / disable which frontmatter shows up
+			frontmatter["aliases"] = playing.name;
+		});
 	} catch (e) {
 		console.log(`Error: ${e}`);
 	}
@@ -129,6 +150,7 @@ export const logPlaying = async (
 	folderPath: string,
 	input: string,
 	playing: TrackFormatted | AlbumFormatted | undefined,
+	logAlbumAlwaysCreateNewTrackFiles: boolean,
 	blockId?: string,
 ) => {
 	if (!playing) {
@@ -136,14 +158,28 @@ export const logPlaying = async (
 		return null;
 	}
 
-	const file = await createPlayingFile(app, folderPath, playing);
+	let file: TFile;
+
+	if (playing.type === "Track") {
+		file = await createTrackFile(app, folderPath, playing);
+	}
 
 	if (playing.type === "Album") {
-		for (const track of playing.tracks) {
-			createPlayingFile(app, folderPath, track);
+		file = await createAlbumFile(
+			app,
+			folderPath,
+			playing,
+			logAlbumAlwaysCreateNewTrackFiles,
+		);
+
+		if (logAlbumAlwaysCreateNewTrackFiles) {
+			for (const track of playing.tracks) {
+				await createTrackFile(app, folderPath, track);
+			}
 		}
 	}
-	const filePath = file.path;
+
+	const filePath = file!.path;
 
 	let progress;
 	if ("progress" in playing) {
@@ -158,7 +194,7 @@ export const logPlaying = async (
 	const activeFile = app.workspace.getActiveFile();
 
 	if (!activeFile || activeFile.path != filePath) {
-		await app.workspace.getLeaf().openFile(file); //TODO: move this to different file?
+		await app.workspace.getLeaf().openFile(file!); //TODO: move this to different file?
 	}
 
 	const editor = app.workspace.activeEditor?.editor;
@@ -168,7 +204,7 @@ export const logPlaying = async (
 		// then editor.lastLine() will not be updated in time even after we append
 		// after await read(file) or sleep(10), the line count will be correct
 		// unaware of better solution
-		await app.vault.cachedRead(file);
+		await app.vault.cachedRead(file!);
 		editor.setCursor({ line: editor.lastLine(), ch: 0 });
 	}
 };

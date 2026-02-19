@@ -1,6 +1,6 @@
 // pkce reference: https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow
 
-import { Notice, ObsidianProtocolData } from "obsidian";
+import { App, Notice, ObsidianProtocolData } from "obsidian";
 import {
 	Album,
 	AlbumFormatted,
@@ -22,6 +22,7 @@ import {
 	base64encode,
 	formatMs,
 	parsePlayingAsWikilink,
+	getFile,
 } from "src/utils";
 import { error } from "console";
 
@@ -273,9 +274,21 @@ export const callEndpoint = async (url: string) => {
 };
 
 export const tracksAsWikilinks = (
+	app: App,
+	folderPath: string,
 	tracks: SimplifiedTrack[] | TrackFormatted[],
+	logAlbumAlwaysCreateNewTrackFiles: boolean,
 ) => {
-	return tracks.map((track) => parsePlayingAsWikilink(track));
+	return tracks.map((track) => {
+		if (!logAlbumAlwaysCreateNewTrackFiles) {
+			const file = getFile(app, folderPath, track.id);
+			if (!file) {
+				return track.name;
+			}
+		}
+
+		return parsePlayingAsWikilink(track);
+	});
 };
 
 export const processCurrentlyPlayingResponse = async (

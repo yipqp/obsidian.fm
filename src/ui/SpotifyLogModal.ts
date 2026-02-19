@@ -6,8 +6,13 @@ import {
 	TextComponent,
 	Notice,
 	normalizePath,
+	TFile,
 } from "obsidian";
-import { appendInput, createPlayingFile } from "src/SpotifyLogger";
+import {
+	appendInput,
+	createAlbumFile,
+	createTrackFile,
+} from "src/SpotifyLogger";
 import { AlbumFormatted, TrackFormatted } from "types";
 import { generateBlockID, parsePlayingAsWikilink } from "src/utils";
 import { SpotifySearchModal } from "./SpotifySearchModal";
@@ -19,6 +24,7 @@ export class SpotifyLogModal extends Modal {
 	private blockId: string | null;
 	private playing: TrackFormatted | AlbumFormatted | null;
 	private input = "";
+	private logAlbumAlwaysCreateNewTrackFiles: boolean;
 	private handleSubmit = () => {
 		this.onSubmit(this.input, this.blockId ?? undefined);
 		this.blockId = null;
@@ -36,11 +42,20 @@ export class SpotifyLogModal extends Modal {
 
 		console.log("searching from log modal");
 
-		const songFile = await createPlayingFile(
-			this.app,
-			this.folderPath,
-			item,
-		);
+		let file: TFile;
+
+		if (item.type === "Track") {
+			file = await createTrackFile(this.app, this.folderPath, item);
+		}
+
+		if (item.type === "Album") {
+			file = await createAlbumFile(
+				this.app,
+				this.folderPath,
+				item,
+				this.logAlbumAlwaysCreateNewTrackFiles,
+			);
+		}
 
 		const refTrackMdLink = parsePlayingAsWikilink(item);
 
@@ -64,7 +79,7 @@ export class SpotifyLogModal extends Modal {
 
 		await appendInput(
 			this.app,
-			songFile.path,
+			file!.path,
 			curBlockMdLink,
 			progress,
 			undefined,
@@ -76,12 +91,15 @@ export class SpotifyLogModal extends Modal {
 		currentlyPlaying: TrackFormatted | AlbumFormatted,
 		folderPath: string,
 		onSubmit: (input: string, blockId?: string) => void,
+		logAlbumAlwaysCreateNewTrackFiles: boolean,
 	) {
 		super(app);
 		this.app = app;
 		this.playing = currentlyPlaying;
 		this.folderPath = folderPath;
 		this.onSubmit = onSubmit;
+		this.logAlbumAlwaysCreateNewTrackFiles =
+			logAlbumAlwaysCreateNewTrackFiles;
 
 		if (!this.playing) {
 			console.log("is episode"); //TODO: Handle episode

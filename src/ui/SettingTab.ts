@@ -25,7 +25,7 @@ export class SettingTab extends PluginSettingTab {
 						// do something
 					}
 					window.open(authUrl);
-				})
+				}),
 			);
 
 		new Setting(containerEl).setName("Folder path").addSearch((search) => {
@@ -48,5 +48,20 @@ export class SettingTab extends PluginSettingTab {
 
 			fs.onSelect(async () => await saveFolderPath(search.getValue()));
 		});
+
+		new Setting(containerEl)
+			.setName("Create new file for each track when logging albums")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(
+						this.plugin.settings.logAlbumAlwaysCreateNewTrackFiles,
+					)
+					.onChange(async (value) => {
+						this.plugin.settings.logAlbumAlwaysCreateNewTrackFiles =
+							value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			);
 	}
 }

@@ -24,9 +24,11 @@ export function registerCommands(plugin: SpotifyLogger) {
 						plugin.settings.spotifyLoggerFolderPath,
 						input,
 						item,
+						plugin.settings.logAlbumAlwaysCreateNewTrackFiles,
 						blockId,
 					);
 				},
+				plugin.settings.logAlbumAlwaysCreateNewTrackFiles,
 			).open();
 		} catch (err) {
 			const message = `[Spotify Logger] Error: ${err.message}`;
@@ -54,9 +56,11 @@ export function registerCommands(plugin: SpotifyLogger) {
 							plugin.settings.spotifyLoggerFolderPath,
 							input,
 							track,
+							plugin.settings.logAlbumAlwaysCreateNewTrackFiles,
 							blockId,
 						);
 					},
+					plugin.settings.logAlbumAlwaysCreateNewTrackFiles,
 				).open();
 			} catch (err) {
 				const message = `[Spotify Logger] Error: ${err.message}`;
@@ -85,9 +89,11 @@ export function registerCommands(plugin: SpotifyLogger) {
 							plugin.settings.spotifyLoggerFolderPath,
 							input,
 							album,
+							plugin.settings.logAlbumAlwaysCreateNewTrackFiles,
 							blockId,
 						);
 					},
+					plugin.settings.logAlbumAlwaysCreateNewTrackFiles,
 				).open();
 			} catch (err) {
 				const message = `[Spotify Logger] Error: ${err.message}`;
