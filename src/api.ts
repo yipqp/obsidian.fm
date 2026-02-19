@@ -23,6 +23,7 @@ import {
 	formatMs,
 	parsePlayingAsWikilink,
 } from "src/utils";
+import { error } from "console";
 
 const clientId = "44e32ffa3b9c46398637431d6808481d";
 const redirectUri = "obsidian://spotify-auth";
@@ -290,6 +291,10 @@ export const processCurrentlyPlayingResponse = async (
 		return trackInfo;
 	}
 	if (type === "Album") {
+		const albumLink = playbackState.item.album.href;
+		if (!albumLink) {
+			throw new Error("no album found for this track");
+		}
 		const album = await callEndpoint(playbackState.item.album.href);
 		const albumInfo = processAlbum(album);
 		return albumInfo;
