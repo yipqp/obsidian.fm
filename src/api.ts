@@ -4,14 +4,12 @@ import { App, Notice, ObsidianProtocolData } from "obsidian";
 import {
 	Album,
 	AlbumFormatted,
-	Artists,
 	MinimalItem,
 	PlaybackState,
 	PlayingType,
 	SimplifiedAlbum,
 	SimplifiedArtist,
 	SimplifiedTrack,
-	Track,
 	TrackFormatted,
 	TrackLike,
 } from "types";
@@ -24,7 +22,6 @@ import {
 	parsePlayingAsWikilink,
 	getFile,
 } from "src/utils";
-import { error } from "console";
 import { updateTrackFrontmatter } from "./SpotifyLogger";
 
 const clientId = "44e32ffa3b9c46398637431d6808481d";

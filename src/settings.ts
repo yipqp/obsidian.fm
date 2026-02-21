@@ -1,9 +1,17 @@
 export interface defaultSettings {
-	spotifyLoggerFolderPath: string;
+	folderPath: string;
 	logAlbumAlwaysCreateNewTrackFiles: boolean;
+	showType: boolean;
+	showDuration: boolean;
+	showTags: boolean;
+	showAlbumReleaseDate: boolean;
 }
 
 export const DEFAULT_SETTINGS: defaultSettings = {
-	spotifyLoggerFolderPath: "",
+	folderPath: "",
 	logAlbumAlwaysCreateNewTrackFiles: false,
+	showType: true,
+	showDuration: true,
+	showAlbumReleaseDate: true,
+	showTags: true,
 };

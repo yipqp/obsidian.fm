@@ -1,6 +1,7 @@
-import { App, normalizePath, moment, Notice, TFile } from "obsidian";
-import { AlbumFormatted, TrackFormatted, PlayingType } from "types";
+import { App, moment, TFile } from "obsidian";
+import { AlbumFormatted, TrackFormatted } from "types";
 import { tracksAsWikilinks } from "./api";
+import { defaultSettings } from "./settings";
 import { getFile, getFilePath, parsePlayingAsWikilink } from "./utils";
 
 const formatInput = (
@@ -101,10 +102,17 @@ export const updateAlbumFrontmatter = (
 // create new album file in folder path if not exist, and return it
 export const createAlbumFile = async (
 	app: App,
-	folderPath: string,
+	settings: defaultSettings,
 	playing: AlbumFormatted,
-	logAlbumAlwaysCreateNewTrackFiles: boolean,
 ) => {
+	const {
+		folderPath,
+		logAlbumAlwaysCreateNewTrackFiles,
+		showTags,
+		showType,
+		showDuration,
+		showAlbumReleaseDate,
+	} = settings;
 	let file = getFile(app, folderPath, playing.id);
 
 	if (file) {
@@ -122,9 +130,10 @@ export const createAlbumFile = async (
 		app.fileManager.processFrontMatter(file, (frontmatter) => {
 			frontmatter["title"] = playing.name;
 			frontmatter["artists"] = playing.artists;
-			frontmatter["type"] = playing.type;
-			frontmatter["release date"] = playing.releaseDate;
-			frontmatter["duration"] = playing.duration;
+			showType && (frontmatter["type"] = playing.type);
+			showAlbumReleaseDate &&
+				(frontmatter["release date"] = playing.releaseDate);
+			showDuration && (frontmatter["duration"] = playing.duration);
 			frontmatter["tracks"] = tracksAsWikilinks(
 				app,
 				folderPath,
@@ -132,7 +141,7 @@ export const createAlbumFile = async (
 				playing,
 				logAlbumAlwaysCreateNewTrackFiles,
 			);
-			frontmatter["tags"] = "";
+			showTags && (frontmatter["tags"] = "");
 			frontmatter["aliases"] = playing.name;
 		});
 	} catch (e) {
@@ -145,9 +154,10 @@ export const createAlbumFile = async (
 // create new track file in folder path if not exist, and return it
 export const createTrackFile = async (
 	app: App,
-	folderPath: string,
+	settings: defaultSettings,
 	playing: TrackFormatted,
 ) => {
+	const { folderPath, showTags, showType, showDuration } = settings;
 	let file = getFile(app, folderPath, playing.id);
 
 	if (file) {
@@ -170,10 +180,10 @@ export const createTrackFile = async (
 		app.fileManager.processFrontMatter(file, (frontmatter) => {
 			frontmatter["title"] = playing.name; // TODO: let user change which frontmatter should reflect display title?
 			frontmatter["artists"] = playing.artists;
-			frontmatter["type"] = playing.type;
+			showType && (frontmatter["type"] = playing.type);
 			frontmatter["album"] = albumWikilink || playing.album;
-			frontmatter["duration"] = playing.duration;
-			frontmatter["tags"] = ""; //TODO: allow user to enable / disable which frontmatter shows up
+			showDuration && (frontmatter["duration"] = playing.duration);
+			showTags && (frontmatter["tags"] = "");
 			frontmatter["aliases"] = playing.name;
 		});
 	} catch (e) {
@@ -185,10 +195,9 @@ export const createTrackFile = async (
 
 export const logPlaying = async (
 	app: App,
-	folderPath: string,
+	settings: defaultSettings,
 	input: string,
 	playing: TrackFormatted | AlbumFormatted | undefined,
-	logAlbumAlwaysCreateNewTrackFiles: boolean,
 	blockId?: string,
 ) => {
 	if (!playing) {
@@ -196,35 +205,27 @@ export const logPlaying = async (
 		return null;
 	}
 
+	const { logAlbumAlwaysCreateNewTrackFiles } = settings;
+
 	let file: TFile;
 
 	if (playing.type === "Track") {
-		file = await createTrackFile(app, folderPath, playing);
+		file = await createTrackFile(app, settings, playing);
 	}
 
 	if (playing.type === "Album") {
-		file = await createAlbumFile(
-			app,
-			folderPath,
-			playing,
-			logAlbumAlwaysCreateNewTrackFiles,
-		);
+		file = await createAlbumFile(app, settings, playing);
 
 		if (logAlbumAlwaysCreateNewTrackFiles) {
 			for (const track of playing.tracks) {
-				await createTrackFile(app, folderPath, track);
+				await createTrackFile(app, settings, track);
 			}
 		}
 	}
 
 	const filePath = file!.path;
 
-	let progress;
-	if ("progress" in playing) {
-		progress = playing.progress;
-	} else {
-		progress = undefined;
-	}
+	const progress = "progress" in playing ? playing.progress : undefined;
 
 	await appendInput(app, filePath, input, progress, blockId);
 

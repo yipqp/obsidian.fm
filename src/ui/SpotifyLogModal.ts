@@ -16,15 +16,16 @@ import {
 import { AlbumFormatted, TrackFormatted } from "types";
 import { generateBlockID, parsePlayingAsWikilink } from "src/utils";
 import { SpotifySearchModal } from "./SpotifySearchModal";
+import { defaultSettings } from "src/settings";
 
 export class SpotifyLogModal extends Modal {
 	public app: App;
+	private settings: defaultSettings;
 	private folderPath: string;
 	private onSubmit: (input: string, blockId?: string) => void;
 	private blockId: string | null;
 	private playing: TrackFormatted | AlbumFormatted | null;
 	private input = "";
-	private logAlbumAlwaysCreateNewTrackFiles: boolean;
 	private handleSubmit = () => {
 		this.onSubmit(this.input, this.blockId ?? undefined);
 		this.blockId = null;
@@ -45,16 +46,11 @@ export class SpotifyLogModal extends Modal {
 		let file: TFile;
 
 		if (item.type === "Track") {
-			file = await createTrackFile(this.app, this.folderPath, item);
+			file = await createTrackFile(this.app, this.settings, item);
 		}
 
 		if (item.type === "Album") {
-			file = await createAlbumFile(
-				this.app,
-				this.folderPath,
-				item,
-				this.logAlbumAlwaysCreateNewTrackFiles,
-			);
+			file = await createAlbumFile(this.app, this.settings, item);
 		}
 
 		const refTrackMdLink = parsePlayingAsWikilink(item);
@@ -88,18 +84,16 @@ export class SpotifyLogModal extends Modal {
 	};
 	constructor(
 		app: App,
+		settings: defaultSettings,
 		currentlyPlaying: TrackFormatted | AlbumFormatted,
-		folderPath: string,
 		onSubmit: (input: string, blockId?: string) => void,
-		logAlbumAlwaysCreateNewTrackFiles: boolean,
 	) {
 		super(app);
 		this.app = app;
+		this.settings = settings;
+		this.folderPath = settings.folderPath;
 		this.playing = currentlyPlaying;
-		this.folderPath = folderPath;
 		this.onSubmit = onSubmit;
-		this.logAlbumAlwaysCreateNewTrackFiles =
-			logAlbumAlwaysCreateNewTrackFiles;
 
 		if (!this.playing) {
 			console.log("is episode"); //TODO: Handle episode

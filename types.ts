@@ -1,4 +1,5 @@
 export type PlayingType = "Track" | "Album";
+export type PlayingTypeFormatted = TrackFormatted | AlbumFormatted;
 
 export interface MinimalItem {
 	href?: string;

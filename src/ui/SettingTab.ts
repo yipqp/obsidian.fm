@@ -30,7 +30,7 @@ export class SettingTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName("Folder path").addSearch((search) => {
 			const saveFolderPath = async (value: string) => {
-				this.plugin.settings.spotifyLoggerFolderPath = value;
+				this.plugin.settings.folderPath = value;
 				await this.plugin.saveSettings();
 			};
 
@@ -41,7 +41,7 @@ export class SettingTab extends PluginSettingTab {
 
 			search
 				.setPlaceholder("Enter folder path")
-				.setValue(this.plugin.settings.spotifyLoggerFolderPath)
+				.setValue(this.plugin.settings.folderPath)
 				.onChange(saveFolderPath); // ignores folder suggestion
 
 			const fs = new FolderSuggest(this.app, search.inputEl);
@@ -63,5 +63,53 @@ export class SettingTab extends PluginSettingTab {
 						this.display();
 					}),
 			);
+
+		new Setting(containerEl)
+			.setName("New File Frontmatter Preferences")
+			.setHeading();
+
+		new Setting(containerEl)
+			.setName("type (ex. type: Album | Track)")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showType)
+					.onChange(async (value) => {
+						this.plugin.settings.showType = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			);
+
+		new Setting(containerEl).setName("duration").addToggle((toggle) =>
+			toggle
+				.setValue(this.plugin.settings.showDuration)
+				.onChange(async (value) => {
+					this.plugin.settings.showDuration = value;
+					await this.plugin.saveSettings();
+					this.display();
+				}),
+		);
+
+		new Setting(containerEl)
+			.setName("album release date")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showAlbumReleaseDate)
+					.onChange(async (value) => {
+						this.plugin.settings.showAlbumReleaseDate = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			);
+
+		new Setting(containerEl).setName("tags").addToggle((toggle) =>
+			toggle
+				.setValue(this.plugin.settings.showTags)
+				.onChange(async (value) => {
+					this.plugin.settings.showTags = value;
+					await this.plugin.saveSettings();
+					this.display();
+				}),
+		);
 	}
 }
