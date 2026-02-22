@@ -69,7 +69,7 @@ export class SettingTab extends PluginSettingTab {
 			.setHeading();
 
 		new Setting(containerEl)
-			.setName("type (ex. type: Album | Track)")
+			.setName("Type")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.showType)
@@ -78,20 +78,24 @@ export class SettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						this.display();
 					}),
-			);
-
-		new Setting(containerEl).setName("duration").addToggle((toggle) =>
-			toggle
-				.setValue(this.plugin.settings.showDuration)
-				.onChange(async (value) => {
-					this.plugin.settings.showDuration = value;
-					await this.plugin.saveSettings();
-					this.display();
-				}),
-		);
+			)
+			.setDesc(`Insert "type" property, e.g. "Album" or "Track"`);
 
 		new Setting(containerEl)
-			.setName("album release date")
+			.setName("Duration")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showDuration)
+					.onChange(async (value) => {
+						this.plugin.settings.showDuration = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			)
+			.setDesc(`Insert "duration" property, e.g. 5:20`);
+
+		new Setting(containerEl)
+			.setName("Album release date")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.showAlbumReleaseDate)
@@ -100,16 +104,20 @@ export class SettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 						this.display();
 					}),
-			);
+			)
+			.setDesc(`Insert "release date" property, e.g. 8/30/2011 or 2001`);
 
-		new Setting(containerEl).setName("tags").addToggle((toggle) =>
-			toggle
-				.setValue(this.plugin.settings.showTags)
-				.onChange(async (value) => {
-					this.plugin.settings.showTags = value;
-					await this.plugin.saveSettings();
-					this.display();
-				}),
-		);
+		new Setting(containerEl)
+			.setName("Tags")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showTags)
+					.onChange(async (value) => {
+						this.plugin.settings.showTags = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			)
+			.setDesc(`Insert empty "tags" property`);
 	}
 }
