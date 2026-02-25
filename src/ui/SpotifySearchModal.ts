@@ -23,6 +23,7 @@ export class SpotifySearchModal extends SuggestModal<MinimalItem> {
 		void
 	>;
 	cb: (item: TrackFormatted | AlbumFormatted) => Promise<void>;
+	type: PlayingType;
 
 	constructor(
 		app: App,
@@ -33,6 +34,7 @@ export class SpotifySearchModal extends SuggestModal<MinimalItem> {
 		this.isLoading = false;
 		this.lastQuery = "";
 		this.cb = cb;
+		this.type = type;
 		this.searchDebouncer = debounce(
 			async (query: string, cb: (items: MinimalItem[]) => void) => {
 				if (query === "" || query === this.lastQuery) {
@@ -43,7 +45,7 @@ export class SpotifySearchModal extends SuggestModal<MinimalItem> {
 
 				console.log("calling search api");
 
-				const data = await searchItem(query, type);
+				const data = await searchItem(query, this.type);
 
 				if (!data) {
 					console.log("no data");
@@ -52,11 +54,11 @@ export class SpotifySearchModal extends SuggestModal<MinimalItem> {
 
 				let itemsFormatted;
 
-				if (type === "Track") {
+				if (this.type === "Track") {
 					itemsFormatted = data.tracks.items.map((track: Track) =>
 						processTrack(track),
 					);
-				} else if (type === "Album") {
+				} else if (this.type === "Album") {
 					itemsFormatted = data.albums.items.map(
 						(album: SimplifiedAlbum) =>
 							processSimplifiedAlbum(album),
@@ -88,8 +90,6 @@ export class SpotifySearchModal extends SuggestModal<MinimalItem> {
 		const imageEl = el.createEl("img", { cls: "track-img" });
 
 		imageEl.src = item.image.url;
-		imageEl.width = 50 || item.image.width; // TODO: figure out best way to handle img sizing
-		imageEl.height = 50 || item.image.height;
 
 		const trackTextContainer = el.createDiv("track-text-container");
 		trackTextContainer.createEl("div", {
@@ -103,7 +103,7 @@ export class SpotifySearchModal extends SuggestModal<MinimalItem> {
 
 	async onChooseSuggestion(
 		item: MinimalItem,
-		evt: MouseEvent | KeyboardEvent,
+		_evt: MouseEvent | KeyboardEvent,
 	) {
 		new Notice(`Selected ${item.name}`);
 		let resolved: TrackFormatted | AlbumFormatted;

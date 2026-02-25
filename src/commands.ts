@@ -5,11 +5,14 @@ import { SpotifySearchModal } from "./ui/SpotifySearchModal";
 import {
 	getAuthUrl,
 	getCurrentlyPlayingTrack,
+	getRecentlyPlayed,
 	isAuthenticated,
 	processCurrentlyPlayingResponse,
+	processRecentlyPlayed,
 } from "./api";
 import SpotifyLogger from "./main";
 import { PlayingTypeFormatted, PlayingType } from "types";
+import { RecentSongsModal } from "./ui/RecentSongsModal";
 
 export function registerCommands(plugin: SpotifyLogger) {
 	const searchItemCb = async (item: PlayingTypeFormatted) => {
@@ -116,12 +119,21 @@ export function registerCommands(plugin: SpotifyLogger) {
 	});
 
 	plugin.addCommand({
-		id: "temp",
-		name: "test",
-		callback: () => {
-			// const curFile = plugin.app.workspace.getActiveFile();
-			// if (!curFile) return;
-			// updateAlbumFrontmatter(plugin.app, curFile, "replaceMe");
+		id: "recent-songs",
+		name: "Recent Songs",
+		callback: async () => {
+			if (!isAuthenticated()) {
+				new Notice("Please connect your Spotify account", 3000);
+				return;
+			}
+			const recentlyPlayed = await getRecentlyPlayed();
+			const recentlyPlayedFormatted =
+				processRecentlyPlayed(recentlyPlayed);
+			new RecentSongsModal(
+				plugin.app,
+				recentlyPlayedFormatted,
+				searchItemCb,
+			).open();
 		},
 	});
 }

@@ -6,7 +6,9 @@ import {
 	AlbumFormatted,
 	MinimalItem,
 	PlaybackState,
+	PlayHistory,
 	PlayingType,
+	RecentlyPlayedTracksPage,
 	SimplifiedAlbum,
 	SimplifiedArtist,
 	SimplifiedTrack,
@@ -26,7 +28,7 @@ import { updateTrackFrontmatter } from "./SpotifyLogger";
 
 const clientId = "44e32ffa3b9c46398637431d6808481d";
 const redirectUri = "obsidian://spotify-auth";
-const scope = "user-read-currently-playing";
+const scope = "user-read-currently-playing user-read-recently-played";
 
 const codeVerifier = generateRandomString(64); // TODO: where to put this
 window.localStorage.setItem("code_verifier", codeVerifier);
@@ -208,6 +210,14 @@ export const getCurrentlyPlayingTrack = async () => {
 	return data;
 };
 
+export const getRecentlyPlayed = async () => {
+	const recentlyPlayedURL = new URL(
+		"https://api.spotify.com/v1/me/player/recently-played",
+	);
+	const data = await callEndpoint(recentlyPlayedURL.toString());
+	return data;
+};
+
 export const searchItem = async (query: string, type: PlayingType) => {
 	if (!isAuthenticated()) {
 		throw new Error("Please connect your spotify account");
@@ -253,7 +263,7 @@ export const callEndpoint = async (url: string) => {
 
 	const accessToken = (await getAccessToken()) ?? "";
 
-	const response = await fetch(url.toString(), {
+	const response = await fetch(url, {
 		headers: {
 			Authorization: "Bearer " + accessToken,
 		},
@@ -338,6 +348,14 @@ export const processTrack = (track: TrackLike): TrackFormatted => {
 		image: track.album.images[track.album.images.length - 1],
 		duration: formatMs(track.duration_ms),
 	};
+};
+
+export const processRecentlyPlayed = (
+	recentlyPlayedTracksPage: RecentlyPlayedTracksPage,
+): TrackFormatted[] => {
+	return recentlyPlayedTracksPage.items.map((playHistory: PlayHistory) =>
+		processTrack(playHistory.track),
+	);
 };
 
 export const processSimplifiedAlbum = (album: SimplifiedAlbum): MinimalItem => {
