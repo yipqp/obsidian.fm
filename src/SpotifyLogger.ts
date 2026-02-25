@@ -126,13 +126,12 @@ export const createAlbumFile = async (
 	const filePath = getFilePath(folderPath, playing.id);
 
 	file = await app.vault.create(filePath, "");
-	/* edit frontmatter for https://github.com/snezhig/obsidian-front-matter-title
-	 * this is to change the file display title, since the title is a unique spotify id
-	 */
 
 	try {
 		app.fileManager.processFrontMatter(file, (frontmatter) => {
-			frontmatter["title"] = playing.name;
+			// use https://github.com/snezhig/obsidian-front-matter-title to display
+			// frontmatter["name"] as the filename
+			frontmatter["name"] = playing.name;
 			frontmatter["artists"] = playing.artists;
 			showType && (frontmatter["type"] = playing.type);
 			showAlbumReleaseDate &&
@@ -182,7 +181,7 @@ export const createTrackFile = async (
 
 	try {
 		app.fileManager.processFrontMatter(file, (frontmatter) => {
-			frontmatter["title"] = playing.name;
+			frontmatter["name"] = playing.name;
 			frontmatter["artists"] = playing.artists;
 			showType && (frontmatter["type"] = playing.type);
 			frontmatter["album"] = albumWikilink || playing.album;
