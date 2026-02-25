@@ -68,6 +68,7 @@ export class SearchModal extends SuggestModal<MinimalItem> {
 			300,
 			true,
 		);
+		this.inputEl.placeholder = `Search ${this.type === "Track" ? "songs" : "albums"}...`;
 	}
 
 	// called when input is changed

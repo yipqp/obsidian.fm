@@ -75,7 +75,7 @@ export function registerCommands(plugin: ObsidianFM) {
 
 	plugin.addCommand({
 		id: "log-currently-playing-track",
-		name: "Log currently playing track",
+		name: "Log currently playing song",
 		callback: requireAuth(async () => {
 			await logCurrentlyPlayingCb("Track");
 		}),
@@ -100,7 +100,7 @@ export function registerCommands(plugin: ObsidianFM) {
 
 	plugin.addCommand({
 		id: "search-track",
-		name: "Search track",
+		name: "Search songs",
 		callback: requireAuth(async () => {
 			new SearchModal(plugin.app, "Track", logSearchedSong).open();
 		}),
@@ -108,15 +108,15 @@ export function registerCommands(plugin: ObsidianFM) {
 
 	plugin.addCommand({
 		id: "search-album",
-		name: "Search album",
+		name: "Search albums",
 		callback: requireAuth(async () => {
 			new SearchModal(plugin.app, "Album", logSearchedSong).open();
 		}),
 	});
 
 	plugin.addCommand({
-		id: "recent-songs",
-		name: "Recent Songs",
+		id: "search-recent-tracks",
+		name: "Search recent songs",
 		callback: requireAuth(async () => {
 			const recentlyPlayed = await getRecentlyPlayed();
 			const recentlyPlayedFormatted =

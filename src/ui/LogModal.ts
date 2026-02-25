@@ -165,7 +165,7 @@ export class LogModal extends Modal {
 
 		const searchButton = new ButtonComponent(buttonContainer)
 			.setButtonText(
-				`Seach ${this.playing.type === "Track" ? "track" : "album"}`,
+				`Search ${this.playing.type === "Track" ? "songs" : "albums"}`,
 			)
 			.onClick(openSearchModal);
 
