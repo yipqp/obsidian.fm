@@ -19,6 +19,7 @@ export class RecentSongsModal extends FuzzySuggestModal<TrackFormatted> {
 		super(app);
 		this.recentSongs = recentSongs;
 		this.cb = cb;
+		this.inputEl.placeholder = "Search recent songs...";
 	}
 
 	getItems(): TrackFormatted[] {
