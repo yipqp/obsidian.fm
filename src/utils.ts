@@ -5,6 +5,7 @@ import {
 	SimplifiedTrack,
 	TrackFormatted,
 } from "types";
+import { isAuthenticated } from "./api";
 
 export const generateRandomString = (length: number) => {
 	const possible =
@@ -108,4 +109,14 @@ export const nowPlayingAsString = (
 export const showError = (err: string) => {
 	const message = `[obsidian.fm] Error: ${err}`;
 	new Notice(`${message}`, 3000);
+};
+
+export const requireAuth = (fn: () => Promise<void>): (() => Promise<void>) => {
+	return async () => {
+		if (!isAuthenticated()) {
+			new Notice("Please connect your Spotify account", 3000);
+			return;
+		}
+		await fn();
+	};
 };

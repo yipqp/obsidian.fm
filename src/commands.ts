@@ -1,4 +1,3 @@
-import { Notice } from "obsidian";
 import { LogModal } from "./ui/LogModal";
 import { logPlaying } from "src/SpotifyLogger";
 import { SearchModal } from "./ui/SearchModal";
@@ -6,26 +5,15 @@ import {
 	getAuthUrl,
 	getCurrentlyPlayingTrack,
 	getRecentlyPlayed,
-	isAuthenticated,
 	processCurrentlyPlayingResponse,
 	processRecentlyPlayed,
 } from "./api";
 import { PlayingTypeFormatted, PlayingType } from "types";
 import { RecentSongsModal } from "./ui/RecentSongsModal";
-import { showError } from "./utils";
+import { requireAuth, showError } from "./utils";
 import ObsidianFM from "./main";
 
 export function registerCommands(plugin: ObsidianFM) {
-	const requireAuth = (fn: () => Promise<void>): (() => Promise<void>) => {
-		return async () => {
-			if (!isAuthenticated()) {
-				new Notice("Please connect your Spotify account", 3000);
-				return;
-			}
-			await fn();
-		};
-	};
-
 	const logSearchedSong = async (item: PlayingTypeFormatted) => {
 		try {
 			new LogModal(
