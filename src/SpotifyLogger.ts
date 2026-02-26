@@ -7,7 +7,7 @@ import {
 	getFile,
 	getFilePath,
 	parsePlayingAsWikilink,
-	showError,
+	showNotice,
 } from "./utils";
 
 const formatInput = (
@@ -57,7 +57,7 @@ export const appendInput = async (
 ) => {
 	const file = app.vault.getFileByPath(filePath);
 	if (!file) {
-		throw new Error(`file ${filePath} could not be found`);
+		throw new Error(`File ${filePath} could not be found`);
 	}
 	let formattedinput = "";
 	if (progress) {
@@ -79,7 +79,7 @@ export const updateTrackFrontmatter = (
 			frontmatter["album"] = albumWikilink;
 		});
 	} catch (e) {
-		console.error("error occurred", e);
+		showNotice(e.message, true);
 	}
 };
 
@@ -100,7 +100,7 @@ export const updateAlbumFrontmatter = (
 			}
 		});
 	} catch (e) {
-		console.error("error occurred", e);
+		showNotice(e.message, true);
 	}
 };
 
@@ -149,7 +149,7 @@ export const createAlbumFile = async (
 			frontmatter["aliases"] = playing.name;
 		});
 	} catch (e) {
-		showError(e);
+		showNotice(e.message, true);
 	}
 
 	return file;
@@ -197,7 +197,7 @@ export const createTrackFile = async (
 			frontmatter["aliases"] = playing.name;
 		});
 	} catch (e) {
-		showError(e);
+		showNotice(e.message, true);
 	}
 
 	return file;
@@ -211,7 +211,7 @@ export const logPlaying = async (
 	blockId?: string,
 ) => {
 	if (!playing) {
-		throw new Error("playback state not supported");
+		throw new Error("Playback state not supported");
 	}
 
 	const { logAlbumAlwaysCreateNewTrackFiles } = settings;

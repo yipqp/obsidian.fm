@@ -5,6 +5,7 @@ import {
 	Notice,
 	renderResults,
 } from "obsidian";
+import { showNotice } from "src/utils";
 import { TrackFormatted } from "types";
 
 export class RecentSongsModal extends FuzzySuggestModal<TrackFormatted> {
@@ -31,7 +32,7 @@ export class RecentSongsModal extends FuzzySuggestModal<TrackFormatted> {
 	}
 
 	async onChooseItem(item: TrackFormatted, _evt: MouseEvent | KeyboardEvent) {
-		new Notice(`Selected ${item.name}`);
+		showNotice(`Selected ${item.name}`);
 		await this.cb(item);
 	}
 

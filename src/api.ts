@@ -23,7 +23,7 @@ import {
 	formatMs,
 	parsePlayingAsWikilink,
 	getFile,
-	showError,
+	showNotice,
 } from "src/utils";
 import { updateTrackFrontmatter } from "./SpotifyLogger";
 
@@ -68,7 +68,7 @@ const setTokens = (
 export const requestToken = async (code: string) => {
 	const codeVerifier = localStorage.getItem("code_verifier");
 	if (!codeVerifier) {
-		console.log("Error: code verifier not found");
+		showNotice("Code verifier not found", true);
 		return null;
 	}
 
@@ -101,7 +101,7 @@ export const requestToken = async (code: string) => {
 const refreshTokens = async () => {
 	const refreshToken = localStorage.getItem("refresh_token");
 	if (!refreshToken) {
-		console.log("Error: refresh token not found");
+		showNotice("Refresh token not found", true);
 		return null;
 	}
 
@@ -131,17 +131,18 @@ const refreshTokens = async () => {
 
 export const handleAuth = async (data: ObsidianProtocolData) => {
 	if (data?.error) {
-		showError(data.error);
+		showNotice(data.error, true);
 		return;
 	}
 	const code = data.code;
 	await requestToken(code);
+	showNotice("Spotify connected");
 };
 
 const getAccessToken = async () => {
 	const expirationString = window.localStorage.getItem("expires_in");
 	if (!expirationString) {
-		console.log("Error: could not get expires_in");
+		showNotice("Could not get expires_in", true);
 		return null;
 	}
 
@@ -165,7 +166,7 @@ export const isAuthenticated = () => {
 
 export const callEndpoint = async (url: string) => {
 	if (!isAuthenticated()) {
-		throw new Error("please connect your spotify account");
+		throw new Error("Please connect your Spotify account");
 	}
 
 	const accessToken = (await getAccessToken()) ?? "";
@@ -177,14 +178,14 @@ export const callEndpoint = async (url: string) => {
 	});
 
 	if (response.status === 204) {
-		throw new Error("no currently playing track");
+		throw new Error("No currently playing track");
 	}
 
 	const data = await response.json();
 
 	if (data.error) {
 		if (data.error.status === 401) {
-			throw new Error("please connect your spotify account");
+			throw new Error("Please connect your Spotify account");
 		}
 		throw new Error(data.error.message);
 	}
@@ -248,7 +249,7 @@ export const processCurrentlyPlayingResponse = async (
 	type: PlayingType,
 ) => {
 	if (playbackState.item == null || playbackState.item.kind === "episode") {
-		throw new Error("episodes not supported");
+		throw new Error("Episodes not supported");
 	}
 	if (type === "Track") {
 		const trackInfo = processTrack(playbackState.item);
@@ -258,13 +259,13 @@ export const processCurrentlyPlayingResponse = async (
 	if (type === "Album") {
 		const albumLink = playbackState.item.album.href;
 		if (!albumLink) {
-			throw new Error("no album href found");
+			throw new Error("No album href found");
 		}
 		const album = await callEndpoint(albumLink);
 		const albumInfo = processAlbum(album);
 		return albumInfo;
 	}
-	throw new Error("current playback state not supported");
+	throw new Error("Current playback state not supported");
 };
 
 export const processRecentlyPlayed = (

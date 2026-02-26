@@ -6,6 +6,7 @@ import {
 	callEndpoint,
 	processSimplifiedAlbum,
 } from "src/api";
+import { showNotice } from "src/utils";
 import {
 	PlayingType,
 	Track,
@@ -102,12 +103,12 @@ export class SearchModal extends SuggestModal<MinimalItem> {
 		item: MinimalItem,
 		_evt: MouseEvent | KeyboardEvent,
 	) {
-		new Notice(`Selected ${item.name}`);
+		showNotice(`Selected ${item.name}`);
 		let resolved: TrackFormatted | AlbumFormatted;
 
 		if (item.type === "Album") {
 			if (!item.href) {
-				throw new Error("album href missing");
+				throw new Error("Album href missing");
 			}
 			const fetchedAlbum = await callEndpoint(item.href);
 			resolved = processAlbum(fetchedAlbum) as AlbumFormatted;

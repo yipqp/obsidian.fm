@@ -18,7 +18,7 @@ import {
 	parsePlayingAsWikilink,
 	reloadOFMT,
 	requireAuth,
-	showError,
+	showNotice,
 } from "src/utils";
 import { SearchModal } from "./SearchModal";
 import { obsidianfmDefaultSettings } from "src/settings";
@@ -86,7 +86,7 @@ export class LogModal extends Modal {
 		textComponent: TextComponent,
 	) => {
 		if (this.playing.id === item.id) {
-			showError("Error: cannot reference self");
+			showNotice("Cannot reference self", true);
 			return;
 		}
 
@@ -116,7 +116,7 @@ export class LogModal extends Modal {
 
 		if (folder == null) {
 			throw new Error(
-				"invalid folder path, please check the defined folder path in settings.",
+				"Invalid folder path, please check the defined folder path in settings.",
 			);
 		}
 

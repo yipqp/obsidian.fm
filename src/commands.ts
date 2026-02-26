@@ -10,7 +10,7 @@ import {
 } from "./api";
 import { PlayingTypeFormatted, PlayingType } from "types";
 import { RecentSongsModal } from "./ui/RecentSongsModal";
-import { requireAuth, showError } from "./utils";
+import { requireAuth, showNotice } from "./utils";
 import ObsidianFM from "./main";
 
 export function registerCommands(plugin: ObsidianFM) {
@@ -31,7 +31,7 @@ export function registerCommands(plugin: ObsidianFM) {
 				},
 			).open();
 		} catch (err) {
-			showError(err.message);
+			showNotice(err.message, true);
 		}
 	};
 
@@ -57,7 +57,7 @@ export function registerCommands(plugin: ObsidianFM) {
 				},
 			).open();
 		} catch (err) {
-			showError(err.message);
+			showNotice(err.message, true);
 		}
 	};
 

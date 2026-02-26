@@ -106,15 +106,15 @@ export const nowPlayingAsString = (
 	return `${playing.artists} - ${playing.name}`;
 };
 
-export const showError = (err: string) => {
-	const message = `[obsidian.fm] Error: ${err}`;
-	new Notice(`${message}`, 3000);
+export const showNotice = (message: string, isError = false) => {
+	const messageFormatted = `[obsidian.fm] ${isError ? "Error: " : ""}${message}`;
+	new Notice(`${messageFormatted}`, 3500);
 };
 
 export const requireAuth = (fn: () => Promise<void>): (() => Promise<void>) => {
 	return async () => {
 		if (!isAuthenticated()) {
-			new Notice("Please connect your Spotify account", 3000);
+			showNotice("Please connect your Spotify account", true);
 			return;
 		}
 		await fn();
