@@ -247,7 +247,7 @@ export const processCurrentlyPlayingResponse = async (
 	playbackState: PlaybackState,
 	type: PlayingType,
 ) => {
-	if (playbackState.item.kind === "episode") {
+	if (playbackState.item == null || playbackState.item.kind === "episode") {
 		throw new Error("episodes not supported");
 	}
 	if (type === "Track") {
