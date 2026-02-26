@@ -242,7 +242,7 @@ export const logPlaying = async (
 	const activeFile = app.workspace.getActiveFile();
 
 	if (!activeFile || activeFile.path != filePath) {
-		await app.workspace.getLeaf().openFile(file!);
+		await app.workspace.getLeaf("tab").openFile(file!);
 	}
 
 	const editor = app.workspace.activeEditor?.editor;
