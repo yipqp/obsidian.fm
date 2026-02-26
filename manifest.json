@@ -2,7 +2,7 @@
 	"id": "obsidian-fm",
 	"name": "obsidian.fm",
 	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
+	"minAppVersion": "1.11.7",
 	"description": "Log and connect thoughts on Spotify songs and albums",
 	"author": "yipqp",
 	"isDesktopOnly": true
