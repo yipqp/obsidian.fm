@@ -65,7 +65,7 @@ export class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("New File Frontmatter Preferences")
+			.setName("New file frontmatter preferences")
 			.setHeading();
 
 		new Setting(containerEl)
