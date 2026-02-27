@@ -57,4 +57,9 @@ This plugin does not require, but highly encourages, the use of the [Front Matte
 	- **Tags**: optional tags to add to new notes, e.g. "add-to-playlist"
 
 ## Limitations
+
 - No support for podcasts, audiobooks, or local files (albums)
+
+## Credits
+
+- [Spotify Web API SDK - TypeScript](https://github.com/spotify/spotify-web-api-ts-sdk) for `types.ts`
