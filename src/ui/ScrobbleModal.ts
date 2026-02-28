@@ -143,7 +143,7 @@ export class ScrobbleModal extends Modal {
 			);
 		}
 
-		const title = itemAsString(this.item);
+		const title = itemAsString(this.item, true);
 		this.setTitle(title);
 
 		this.contentEl.addClass("scrobble-modal-content-container");

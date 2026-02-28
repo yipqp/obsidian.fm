@@ -105,7 +105,7 @@ export const getFile = (
 
 export const itemAsString = (
 	item: MinimalItem | SimplifiedTrack,
-	showArtists = false,
+	showArtists: boolean,
 ) => {
 	return showArtists ? `${item.artists} - ${item.name}` : `${item.name}`;
 };
