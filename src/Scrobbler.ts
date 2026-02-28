@@ -106,6 +106,31 @@ export const updateAlbumFrontmatter = (
 	}
 };
 
+const createFile = async (
+	app: App,
+	settings: scrobbleDefaultSettings,
+	id: string,
+	setFrontmatter: (frontmatter: any) => void,
+) => {
+	const { folderPath } = settings;
+
+	let file = getFile(app, folderPath, id);
+	if (file) return file;
+
+	const filePath = getFilePath(folderPath, id);
+	file = await app.vault.create(filePath, "");
+
+	try {
+		app.fileManager.processFrontMatter(file, (frontmatter) => {
+			setFrontmatter(frontmatter);
+		});
+	} catch (e) {
+		showNotice(e.message, true);
+	}
+
+	return file;
+};
+
 // create new album file in folder path if not exist, and return it
 export const createAlbumFile = async (
 	app: App,
@@ -120,41 +145,26 @@ export const createAlbumFile = async (
 		showAlbumReleaseDate,
 		aliasShowArtists,
 	} = settings;
-	let file = getFile(app, folderPath, album.id);
 
-	if (file) {
-		return file;
-	}
-
-	const filePath = getFilePath(folderPath, album.id);
-
-	file = await app.vault.create(filePath, "");
-
-	try {
-		app.fileManager.processFrontMatter(file, (frontmatter) => {
-			// use https://github.com/snezhig/obsidian-front-matter-title to display
-			// frontmatter["name"] as the filename
-			frontmatter["name"] = album.name;
-			frontmatter["artists"] = album.artists;
-			showType && (frontmatter["type"] = album.type);
-			showAlbumReleaseDate &&
-				(frontmatter["release date"] = album.releaseDate);
-			showDuration && (frontmatter["duration"] = album.duration);
-			frontmatter["tracks"] = tracksAsWikilinks(
-				app,
-				settings,
-				folderPath,
-				album.tracks,
-				album,
-			);
-			showTags && (frontmatter["tags"] = "");
-			frontmatter["aliases"] = itemAsString(album, aliasShowArtists);
-		});
-	} catch (e) {
-		showNotice(e.message, true);
-	}
-
-	return file;
+	return createFile(app, settings, album.id, (frontmatter) => {
+		// use https://github.com/snezhig/obsidian-front-matter-title to display
+		// frontmatter["name"] as the filename
+		frontmatter["name"] = album.name;
+		frontmatter["artists"] = album.artists;
+		showType && (frontmatter["type"] = album.type);
+		showAlbumReleaseDate &&
+			(frontmatter["release date"] = album.releaseDate);
+		showDuration && (frontmatter["duration"] = album.duration);
+		frontmatter["tracks"] = tracksAsWikilinks(
+			app,
+			settings,
+			folderPath,
+			album.tracks,
+			album,
+		);
+		showTags && (frontmatter["tags"] = "");
+		frontmatter["aliases"] = itemAsString(album, aliasShowArtists);
+	});
 };
 
 // create new track file in folder path if not exist, and return it
@@ -171,15 +181,10 @@ export const createTrackFile = async (
 		track.id = await generateIdFromTrack(track);
 	}
 
-	let file = getFile(app, folderPath, track.id);
-
+	const file = getFile(app, folderPath, track.id);
 	if (file) {
 		return file;
 	}
-
-	const filePath = getFilePath(folderPath, track.id);
-
-	file = await app.vault.create(filePath, "");
 
 	// check: if album exists, then frontmatter[album] should link back to that album
 	let albumWikilink = "";
@@ -189,21 +194,15 @@ export const createTrackFile = async (
 		updateAlbumFrontmatter(app, albumFile, track);
 	}
 
-	try {
-		app.fileManager.processFrontMatter(file, (frontmatter) => {
-			frontmatter["name"] = track.name;
-			frontmatter["artists"] = track.artists;
-			showType && (frontmatter["type"] = track.type);
-			frontmatter["album"] = albumWikilink || track.album;
-			showDuration && (frontmatter["duration"] = track.duration);
-			showTags && (frontmatter["tags"] = "");
-			frontmatter["aliases"] = itemAsString(track, aliasShowArtists);
-		});
-	} catch (e) {
-		showNotice(e.message, true);
-	}
-
-	return file;
+	return createFile(app, settings, track.id, (frontmatter) => {
+		frontmatter["name"] = track.name;
+		frontmatter["artists"] = track.artists;
+		showType && (frontmatter["type"] = track.type);
+		frontmatter["album"] = albumWikilink || track.album;
+		showDuration && (frontmatter["duration"] = track.duration);
+		showTags && (frontmatter["tags"] = "");
+		frontmatter["aliases"] = itemAsString(track, aliasShowArtists);
+	});
 };
 
 export const scrobbleItem = async (
