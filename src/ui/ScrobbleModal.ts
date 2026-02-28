@@ -9,7 +9,7 @@ import {
 import { appendInput, createAlbumFile, createTrackFile } from "src/Scrobbler";
 import { ItemFormatted } from "types";
 import {
-	generateBlockID,
+	generateBlockId,
 	itemAsString,
 	parseItemAsWikilink,
 	reloadOFMT,
@@ -60,7 +60,7 @@ export class ScrobbleModal extends Modal {
 			}
 
 			if (!blockIdGenerated) {
-				this.blockId = generateBlockID(6);
+				this.blockId = generateBlockId(6);
 				blockIdGenerated = true;
 			}
 

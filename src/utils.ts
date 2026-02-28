@@ -45,7 +45,7 @@ export const formatMs = (ms: number) => {
 };
 
 // obsidian's unique block id generation isn't exposed in api as of late 2025
-export const generateBlockID = (idLen: number): string => {
+export const generateBlockId = (idLen: number): string => {
 	const chars =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	let id = "";
@@ -59,7 +59,7 @@ export const generateBlockID = (idLen: number): string => {
 
 // generate id from track to use as filename
 // for local files without Spotify ids
-export const generateIDFromTrack = async (
+export const generateIdFromTrack = async (
 	track: TrackFormatted,
 ): Promise<string> => {
 	const plain = `${track.artists} - ${track.name}`;

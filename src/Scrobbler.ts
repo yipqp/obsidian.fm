@@ -2,7 +2,7 @@ import { App, moment, TFile } from "obsidian";
 import { AlbumFormatted, ItemFormatted, TrackFormatted } from "types";
 import { tracksAsWikilinks } from "./api";
 import {
-	generateIDFromTrack,
+	generateIdFromTrack,
 	getFile,
 	getFilePath,
 	parseItemAsWikilink,
@@ -165,7 +165,7 @@ export const createTrackFile = async (
 
 	if (!track.id) {
 		// playing from local file
-		track.id = await generateIDFromTrack(track);
+		track.id = await generateIdFromTrack(track);
 	}
 
 	let file = getFile(app, folderPath, track.id);
