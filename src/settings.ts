@@ -5,6 +5,8 @@ export interface scrobbleDefaultSettings {
 	showDuration: boolean;
 	showTags: boolean;
 	showAlbumReleaseDate: boolean;
+	aliasShowArtists: boolean;
+	wikilinkShowArtists: boolean;
 }
 
 export const SCROBBLE_DEFAULT_SETTINGS: scrobbleDefaultSettings = {
@@ -14,4 +16,6 @@ export const SCROBBLE_DEFAULT_SETTINGS: scrobbleDefaultSettings = {
 	showDuration: true,
 	showAlbumReleaseDate: true,
 	showTags: true,
+	aliasShowArtists: true,
+	wikilinkShowArtists: false,
 };

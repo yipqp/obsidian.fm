@@ -6,6 +6,7 @@ import {
 	TrackFormatted,
 } from "types";
 import { isAuthenticated } from "./api";
+import { scrobbleDefaultSettings } from "./settings";
 
 export const generateRandomString = (length: number) => {
 	const possible =
@@ -73,12 +74,14 @@ export const generateIdFromTrack = async (
 
 export const parseItemAsWikilink = (
 	item: MinimalItem | SimplifiedTrack,
+	wikilinkShowArtists: boolean,
 	embedLinkedContent?: boolean,
 	blockId?: string,
 ): string => {
 	const prefix = embedLinkedContent ? "!" : "";
 	const blockIdFormatted = blockId ? `#^${blockId}` : "";
-	return `${prefix}[[${item.id}${blockIdFormatted}|${item.name}]]`;
+	const display = wikilinkShowArtists ? itemAsString(item) : item.name;
+	return `${prefix}[[${item.id}${blockIdFormatted}|${display}]]`;
 };
 
 export const getFilePath = (folderPath: string, id: string): string => {
@@ -100,7 +103,7 @@ export const getFile = (
 	return null;
 };
 
-export const itemAsString = (item: ItemFormatted) => {
+export const itemAsString = (item: MinimalItem | SimplifiedTrack) => {
 	return `${item.artists} - ${item.name}`;
 };
 

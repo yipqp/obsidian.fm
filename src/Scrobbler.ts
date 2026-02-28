@@ -75,7 +75,7 @@ export const updateTrackFrontmatter = (
 ) => {
 	try {
 		app.fileManager.processFrontMatter(trackFile, (frontmatter) => {
-			const albumWikilink = parseItemAsWikilink(album);
+			const albumWikilink = parseItemAsWikilink(album, false);
 			frontmatter["album"] = albumWikilink;
 		});
 	} catch (e) {
@@ -92,7 +92,7 @@ export const updateAlbumFrontmatter = (
 		app.fileManager.processFrontMatter(albumFile, (frontmatter) => {
 			const tracks = frontmatter["tracks"];
 			const trackName = track.name;
-			const trackWikilink = parseItemAsWikilink(track);
+			const trackWikilink = parseItemAsWikilink(track, false);
 			const index = tracks.indexOf(trackName);
 
 			if (index !== -1) {
@@ -112,7 +112,6 @@ export const createAlbumFile = async (
 ) => {
 	const {
 		folderPath,
-		scrobbleAlbumAlwaysCreatesNewTrackFiles,
 		showTags,
 		showType,
 		showDuration,
@@ -140,10 +139,10 @@ export const createAlbumFile = async (
 			showDuration && (frontmatter["duration"] = album.duration);
 			frontmatter["tracks"] = tracksAsWikilinks(
 				app,
+				settings,
 				folderPath,
 				album.tracks,
 				album,
-				scrobbleAlbumAlwaysCreatesNewTrackFiles,
 			);
 			showTags && (frontmatter["tags"] = "");
 			frontmatter["aliases"] = `${album.artists} - ${album.name}`;

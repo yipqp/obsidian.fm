@@ -117,5 +117,31 @@ export class SettingTab extends PluginSettingTab {
 					}),
 			)
 			.setDesc(`Insert empty "tags" property`);
+
+		new Setting(containerEl)
+			.setName("Aliases: Show artists")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.aliasShowArtists)
+					.onChange(async (value) => {
+						this.plugin.settings.aliasShowArtists = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			)
+			.setDesc(`//TODO`);
+
+		new Setting(containerEl) //TODO: move to diff header?
+			.setName("Wikilinks: Show artists")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.wikilinkShowArtists)
+					.onChange(async (value) => {
+						this.plugin.settings.wikilinkShowArtists = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			)
+			.setDesc(`//TODO`);
 	}
 }

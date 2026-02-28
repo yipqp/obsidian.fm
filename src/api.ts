@@ -26,6 +26,7 @@ import {
 	showNotice,
 } from "src/utils";
 import { updateTrackFrontmatter } from "./Scrobbler";
+import { scrobbleDefaultSettings } from "./settings";
 
 const clientId = "44e32ffa3b9c46398637431d6808481d";
 const redirectUri = "obsidian://scrobble-spotify-auth";
@@ -226,21 +227,21 @@ export const searchItem = async (query: string, itemType: ItemType) => {
 
 export const tracksAsWikilinks = (
 	app: App,
+	settings: scrobbleDefaultSettings,
 	folderPath: string,
 	tracks: SimplifiedTrack[] | TrackFormatted[],
 	album: AlbumFormatted,
-	scrobbleAlbumAlwaysCreateNewTrackFiles: boolean,
 ) => {
 	return tracks.map((track) => {
 		const trackFile = getFile(app, folderPath, track.id);
 		if (trackFile) {
 			// if this track was scrobbled before, then link current album in that track's frontmatter[album]
 			updateTrackFrontmatter(app, trackFile, album);
-		} else if (!scrobbleAlbumAlwaysCreateNewTrackFiles) {
+		} else if (!settings.scrobbleAlbumAlwaysCreatesNewTrackFiles) {
 			return track.name;
 		}
 
-		return parseItemAsWikilink(track);
+		return parseItemAsWikilink(track, false);
 	});
 };
 

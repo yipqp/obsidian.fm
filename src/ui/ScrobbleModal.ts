@@ -45,13 +45,15 @@ export class ScrobbleModal extends Modal {
 			return;
 		}
 
+		const { wikilinkShowArtists } = this.settings;
+
 		// only generate blockId if there is at least one valid pending
 		// reference, and only generate blockId once per scrobble
 		let blockIdGenerated = false;
 
 		while (this.pendingReferences.length > 0) {
 			const item = this.pendingReferences.pop()!;
-			const itemMdLink = parseItemAsWikilink(item);
+			const itemMdLink = parseItemAsWikilink(item, wikilinkShowArtists);
 
 			// check if user changed their mind about including this item as a
 			// reference
@@ -76,11 +78,15 @@ export class ScrobbleModal extends Modal {
 
 			const curBlockMdLink = parseItemAsWikilink(
 				this.item,
+				wikilinkShowArtists,
 				true,
 				this.blockId,
 			);
 
-			const curTrackMdLink = parseItemAsWikilink(this.item);
+			const curTrackMdLink = parseItemAsWikilink(
+				this.item,
+				wikilinkShowArtists,
+			);
 
 			const progress =
 				"progress" in this.item ? this.item.progress : undefined;
@@ -105,8 +111,10 @@ export class ScrobbleModal extends Modal {
 			return;
 		}
 
+		const { wikilinkShowArtists } = this.settings;
+
 		this.pendingReferences.push(item);
-		const refTrackMdLink = parseItemAsWikilink(item);
+		const refTrackMdLink = parseItemAsWikilink(item, wikilinkShowArtists);
 		textComponent.setValue(textComponent.getValue() + refTrackMdLink);
 		this.input = textComponent.getValue();
 	};
