@@ -27,13 +27,17 @@ export class ScrobbleModal extends Modal {
 	private blockId: string | null;
 	private item: ItemFormatted;
 	private input = "";
+	private pendingItems: ItemFormatted[];
 	private handleSubmit = async () => {
 		await this.updateFiles();
 		this.onSubmit(this.input, this.blockId ?? undefined);
 		this.blockId = null;
+		this.pendingItems = [];
+		// without this, Obsidian Front Matter Title won't know new files
+		// were created, since active leaf may not have changed
+		reloadOFMT(this.app);
 		this.close();
 	};
-	private pendingItems: ItemFormatted[];
 	private updateFiles = async () => {
 		this.blockId = generateBlockID(6);
 		while (this.pendingItems.length > 0) {
@@ -69,10 +73,6 @@ export class ScrobbleModal extends Modal {
 				undefined,
 				curTrackMdLink,
 			);
-
-			// without this, Obsidian Front Matter Title won't know new files
-			// were created since active leaf has not changed
-			reloadOFMT(this.app);
 		}
 	};
 
