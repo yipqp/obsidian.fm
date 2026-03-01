@@ -63,6 +63,21 @@ export class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Wikilinks: Show artists")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.wikilinkShowArtists)
+					.onChange(async (value) => {
+						this.plugin.settings.wikilinkShowArtists = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			)
+			.setDesc(
+				`Show artists in wikilink display text (e.g. "[[trackId|SZA - Good Days]]" vs "[[trackId|Good Days]]")`,
+			);
+
+		new Setting(containerEl)
 			.setName("New note frontmatter preferences")
 			.setHeading();
 
@@ -77,7 +92,7 @@ export class SettingTab extends PluginSettingTab {
 						this.display();
 					}),
 			)
-			.setDesc(`Insert "type" property, e.g. "Album" or "Track"`);
+			.setDesc(`Insert "type" property (e.g. "Album" or "Track")`);
 
 		new Setting(containerEl)
 			.setName("Duration")
@@ -90,7 +105,7 @@ export class SettingTab extends PluginSettingTab {
 						this.display();
 					}),
 			)
-			.setDesc(`Insert "duration" property, e.g. 5:20`);
+			.setDesc(`Insert "duration" property (e.g. "5:20")`);
 
 		new Setting(containerEl)
 			.setName("Album release date")
@@ -103,7 +118,9 @@ export class SettingTab extends PluginSettingTab {
 						this.display();
 					}),
 			)
-			.setDesc(`Insert "release date" property, e.g. 08/30/2011 or 2001`);
+			.setDesc(
+				`Insert "release date" property (e.g. "08/30/2011" or "2001")`,
+			);
 
 		new Setting(containerEl)
 			.setName("Tags")
@@ -129,19 +146,8 @@ export class SettingTab extends PluginSettingTab {
 						this.display();
 					}),
 			)
-			.setDesc(`//TODO`);
-
-		new Setting(containerEl) //TODO: move to diff header?
-			.setName("Wikilinks: Show artists")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.wikilinkShowArtists)
-					.onChange(async (value) => {
-						this.plugin.settings.wikilinkShowArtists = value;
-						await this.plugin.saveSettings();
-						this.display();
-					}),
-			)
-			.setDesc(`//TODO`);
+			.setDesc(
+				`Show artists in "aliases" property (e.g. "SZA - Good Days" vs "Good Days")`,
+			);
 	}
 }
