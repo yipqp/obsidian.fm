@@ -24,14 +24,10 @@ export class SearchModal extends SuggestModal<MinimalItem> {
 		[query: string, cb: (items: MinimalItem[]) => void],
 		void
 	>;
-	cb: (item: ItemFormatted) => Promise<void>;
+	cb: (item: ItemFormatted) => void;
 	type: ItemType;
 
-	constructor(
-		app: App,
-		type: ItemType,
-		cb: (item: MinimalItem) => Promise<void>,
-	) {
+	constructor(app: App, type: ItemType, cb: (item: MinimalItem) => void) {
 		super(app);
 		this.isLoading = false;
 		this.lastQuery = "";
@@ -100,22 +96,22 @@ export class SearchModal extends SuggestModal<MinimalItem> {
 		});
 	}
 
-	async onChooseSuggestion(
-		item: MinimalItem,
-		_evt: MouseEvent | KeyboardEvent,
-	) {
-		showNotice(`Selected ${item.name}`);
-		let resolved: ItemFormatted;
+	onChooseSuggestion(item: MinimalItem, _evt: MouseEvent | KeyboardEvent) {
+		// wrap async function in IIFE because onChooseSuggestion in superclass isn't async
+		(async () => {
+			showNotice(`Selected ${item.name}`);
+			let resolved: ItemFormatted;
 
-		if (item.type === "Album") {
-			if (!item.href) {
-				throw new Error("Album href missing");
+			if (item.type === "Album") {
+				if (!item.href) {
+					throw new Error("Album href missing");
+				}
+				const fetchedAlbum = await callEndpoint(this.app, item.href);
+				resolved = processAlbum(fetchedAlbum) as AlbumFormatted;
+			} else {
+				resolved = item as TrackFormatted;
 			}
-			const fetchedAlbum = await callEndpoint(this.app, item.href);
-			resolved = processAlbum(fetchedAlbum) as AlbumFormatted;
-		} else {
-			resolved = item as TrackFormatted;
-		}
-		await this.cb(resolved);
+			this.cb(resolved);
+		})().catch((e) => showNotice(e, true));
 	}
 }

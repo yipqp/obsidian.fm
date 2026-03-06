@@ -14,7 +14,7 @@ import { requireAuth, showNotice } from "./utils";
 import Scrobble from "./main";
 
 export function registerCommands(plugin: Scrobble) {
-	const scrobbleSearchedSong = async (item: ItemFormatted) => {
+	const scrobbleSearchedSong = (item: ItemFormatted) => {
 		try {
 			new ScrobbleModal(
 				plugin.app,

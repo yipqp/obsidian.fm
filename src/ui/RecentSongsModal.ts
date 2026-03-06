@@ -3,13 +3,13 @@ import { showNotice } from "src/utils";
 import { TrackFormatted } from "types";
 
 export class RecentSongsModal extends FuzzySuggestModal<TrackFormatted> {
-	cb: (item: TrackFormatted) => Promise<void>;
+	cb: (item: TrackFormatted) => void;
 	recentSongs: TrackFormatted[];
 
 	constructor(
 		app: App,
 		recentSongs: TrackFormatted[],
-		cb: (item: TrackFormatted) => Promise<void>,
+		cb: (item: TrackFormatted) => void,
 	) {
 		super(app);
 		this.recentSongs = recentSongs;
@@ -25,9 +25,9 @@ export class RecentSongsModal extends FuzzySuggestModal<TrackFormatted> {
 		return item.name + " " + item.artists;
 	}
 
-	async onChooseItem(item: TrackFormatted, _evt: MouseEvent | KeyboardEvent) {
+	onChooseItem(item: TrackFormatted, _evt: MouseEvent | KeyboardEvent) {
 		showNotice(`Selected ${item.name}`);
-		await this.cb(item);
+		this.cb(item);
 	}
 
 	renderSuggestion(match: FuzzyMatch<TrackFormatted>, el: HTMLElement): void {
