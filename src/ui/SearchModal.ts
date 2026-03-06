@@ -45,7 +45,7 @@ export class SearchModal extends SuggestModal<MinimalItem> {
 
 				this.lastQuery = query;
 
-				const data = await searchItem(query, this.type);
+				const data = await searchItem(this.app, query, this.type);
 
 				if (!data) {
 					return Promise.resolve([]);
@@ -111,7 +111,7 @@ export class SearchModal extends SuggestModal<MinimalItem> {
 			if (!item.href) {
 				throw new Error("Album href missing");
 			}
-			const fetchedAlbum = await callEndpoint(item.href);
+			const fetchedAlbum = await callEndpoint(this.app, item.href);
 			resolved = processAlbum(fetchedAlbum) as AlbumFormatted;
 		} else {
 			resolved = item as TrackFormatted;

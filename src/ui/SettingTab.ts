@@ -20,7 +20,7 @@ export class SettingTab extends PluginSettingTab {
 			.setName("Connect Spotify")
 			.addButton((button) =>
 				button.setButtonText("Connect").onClick(async () => {
-					const authUrl = await getAuthUrl();
+					const authUrl = await getAuthUrl(this.app);
 					window.open(authUrl);
 				}),
 			);

@@ -174,7 +174,7 @@ export class ScrobbleModal extends Modal {
 			this.handleChooseSuggestion(item, textComponent);
 		};
 
-		const openSearchModal = requireAuth(async () => {
+		const openSearchModal = requireAuth(this.app, async () => {
 			new SearchModal(
 				this.app,
 				this.item.type,

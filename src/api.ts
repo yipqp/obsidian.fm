@@ -31,11 +31,14 @@ import { scrobbleDefaultSettings } from "./settings";
 const clientId = "44e32ffa3b9c46398637431d6808481d";
 const redirectUri = "obsidian://scrobble-spotify-auth";
 const scope = "user-read-currently-playing user-read-recently-played";
-const codeVerifier = generateRandomString(64);
 
-window.localStorage.setItem("code_verifier", codeVerifier);
+export const setCodeVerifier = (app: App) => {
+	const codeVerifier = generateRandomString(64);
+	app.saveLocalStorage("code_verifier", codeVerifier);
+};
 
-export const getAuthUrl = async () => {
+export const getAuthUrl = async (app: App) => {
+	const codeVerifier = app.loadLocalStorage("code_verifier");
 	const authUrl = new URL("https://accounts.spotify.com/authorize");
 	const hashed = await sha256(codeVerifier);
 	const codeChallenge = base64encode(hashed);
@@ -53,21 +56,22 @@ export const getAuthUrl = async () => {
 };
 
 const setTokens = (
+	app: App,
 	accessToken: string,
 	expiresIn: number,
 	refreshToken: string | null,
 ) => {
 	const expiration = Date.now() + expiresIn * 1000; // expiresIn is in seconds from now
-	localStorage.setItem("expires_in", expiration.toString());
-	localStorage.setItem("access_token", accessToken);
+	app.saveLocalStorage("expires_in", expiration.toString());
+	app.saveLocalStorage("access_token", accessToken);
 	if (refreshToken) {
-		localStorage.setItem("refresh_token", refreshToken);
+		app.saveLocalStorage("refresh_token", refreshToken);
 	}
 };
 
 // exchange auth code for access token
-export const requestToken = async (code: string) => {
-	const codeVerifier = localStorage.getItem("code_verifier");
+export const requestToken = async (app: App, code: string) => {
+	const codeVerifier = app.loadLocalStorage("code_verifier");
 	if (!codeVerifier) {
 		showNotice("Code verifier not found", true);
 		return null;
@@ -91,6 +95,7 @@ export const requestToken = async (code: string) => {
 	const response = await body.json();
 
 	setTokens(
+		app,
 		response.access_token,
 		response.expires_in,
 		response.refresh_token,
@@ -99,8 +104,8 @@ export const requestToken = async (code: string) => {
 	return response;
 };
 
-const refreshTokens = async () => {
-	const refreshToken = localStorage.getItem("refresh_token");
+const refreshTokens = async (app: App) => {
+	const refreshToken = app.loadLocalStorage("refresh_token");
 	if (!refreshToken) {
 		showNotice("Refresh token not found", true);
 		return null;
@@ -122,6 +127,7 @@ const refreshTokens = async () => {
 	const response = await body.json();
 
 	setTokens(
+		app,
 		response.access_token,
 		response.expires_in,
 		response.refresh_token,
@@ -130,18 +136,18 @@ const refreshTokens = async () => {
 	return response;
 };
 
-export const handleAuth = async (data: ObsidianProtocolData) => {
+export const handleAuth = async (app: App, data: ObsidianProtocolData) => {
 	if (data?.error) {
 		showNotice(data.error, true);
 		return;
 	}
 	const code = data.code;
-	await requestToken(code);
+	await requestToken(app, code);
 	showNotice("Spotify connected");
 };
 
-const getAccessToken = async () => {
-	const expirationString = window.localStorage.getItem("expires_in");
+const getAccessToken = async (app: App) => {
+	const expirationString = app.loadLocalStorage("expires_in");
 	if (!expirationString) {
 		showNotice("Could not get expires_in", true);
 		return null;
@@ -149,28 +155,28 @@ const getAccessToken = async () => {
 
 	const expiration = parseInt(expirationString);
 	if (Date.now() >= expiration) {
-		await refreshTokens();
+		await refreshTokens(app);
 	}
 
-	const token = window.localStorage.getItem("access_token");
+	const token = app.loadLocalStorage("access_token");
 	return token;
 };
 
 // to prevent checking authentication through api call
 // will fail if user revokes permissions via Spotify
-export const isAuthenticated = () => {
+export const isAuthenticated = (app: App) => {
 	return (
-		window.localStorage.getItem("access_token") &&
-		window.localStorage.getItem("refresh_token")
+		app.loadLocalStorage("access_token") &&
+		app.loadLocalStorage("refresh_token")
 	);
 };
 
-export const callEndpoint = async (url: string) => {
-	if (!isAuthenticated()) {
+export const callEndpoint = async (app: App, url: string) => {
+	if (!isAuthenticated(app)) {
 		throw new Error("Please connect your Spotify account");
 	}
 
-	const accessToken = (await getAccessToken()) ?? "";
+	const accessToken = (await getAccessToken(app)) ?? "";
 
 	const response = await requestUrl({
 		url: url,
@@ -196,21 +202,23 @@ export const callEndpoint = async (url: string) => {
 	return data;
 };
 
-export const getCurrentlyPlayingTrack = async () => {
+export const getCurrentlyPlayingTrack = async (app: App) => {
 	const data = await callEndpoint(
+		app,
 		"https://api.spotify.com/v1/me/player/currently-playing",
 	);
 	return data;
 };
 
-export const getRecentlyPlayed = async () => {
+export const getRecentlyPlayed = async (app: App) => {
 	const data = await callEndpoint(
+		app,
 		"https://api.spotify.com/v1/me/player/recently-played",
 	);
 	return data;
 };
 
-export const searchItem = async (query: string, itemType: ItemType) => {
+export const searchItem = async (app: App, query: string, itemType: ItemType) => {
 	if (!query) {
 		return null;
 	}
@@ -223,7 +231,7 @@ export const searchItem = async (query: string, itemType: ItemType) => {
 
 	searchURL.search = new URLSearchParams(params).toString();
 
-	const data = callEndpoint(searchURL.toString());
+	const data = callEndpoint(app, searchURL.toString());
 	return data;
 };
 
@@ -250,6 +258,7 @@ export const tracksAsWikilinks = (
 };
 
 export const processCurrentlyPlayingResponse = async (
+	app: App,
 	playbackState: PlaybackState,
 	itemType: ItemType,
 ) => {
@@ -266,7 +275,7 @@ export const processCurrentlyPlayingResponse = async (
 		if (!albumLink) {
 			throw new Error("No album href found");
 		}
-		const album = await callEndpoint(albumLink);
+		const album = await callEndpoint(app, albumLink);
 		const albumInfo = processAlbum(album);
 		return albumInfo;
 	}
