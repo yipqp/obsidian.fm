@@ -77,8 +77,8 @@ export const requestToken = async (app: App, code: string) => {
 		return null;
 	}
 
-	const url = "https://accounts.spotify.com/api/token";
-	const payload = {
+	const response = await requestUrl({
+		url: "https://accounts.spotify.com/api/token",
 		method: "POST",
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded",
@@ -89,19 +89,14 @@ export const requestToken = async (app: App, code: string) => {
 			code,
 			redirect_uri: redirectUri,
 			code_verifier: codeVerifier,
-		}),
-	};
-	const body = await fetch(url, payload);
-	const response = await body.json();
+		}).toString(),
+	});
 
-	setTokens(
-		app,
-		response.access_token,
-		response.expires_in,
-		response.refresh_token,
-	);
+	const data = response.json;
 
-	return response;
+	setTokens(app, data.access_token, data.expires_in, data.refresh_token);
+
+	return data;
 };
 
 const refreshTokens = async (app: App) => {
@@ -111,8 +106,8 @@ const refreshTokens = async (app: App) => {
 		return null;
 	}
 
-	const url = "https://accounts.spotify.com/api/token";
-	const payload = {
+	const response = await requestUrl({
+		url: "https://accounts.spotify.com/api/token",
 		method: "POST",
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded",
@@ -121,19 +116,14 @@ const refreshTokens = async (app: App) => {
 			grant_type: "refresh_token",
 			refresh_token: refreshToken,
 			client_id: clientId,
-		}),
-	};
-	const body = await fetch(url, payload);
-	const response = await body.json();
+		}).toString(),
+	});
 
-	setTokens(
-		app,
-		response.access_token,
-		response.expires_in,
-		response.refresh_token,
-	);
+	const data = response.json;
 
-	return response;
+	setTokens(app, data.access_token, data.expires_in, data.refresh_token);
+
+	return data;
 };
 
 export const handleAuth = async (app: App, data: ObsidianProtocolData) => {
@@ -179,7 +169,7 @@ export const callEndpoint = async (app: App, url: string) => {
 	const accessToken = (await getAccessToken(app)) ?? "";
 
 	const response = await requestUrl({
-		url: url,
+		url,
 		headers: {
 			Authorization: "Bearer " + accessToken,
 		},
@@ -218,7 +208,11 @@ export const getRecentlyPlayed = async (app: App) => {
 	return data;
 };
 
-export const searchItem = async (app: App, query: string, itemType: ItemType) => {
+export const searchItem = async (
+	app: App,
+	query: string,
+	itemType: ItemType,
+) => {
 	if (!query) {
 		return null;
 	}
