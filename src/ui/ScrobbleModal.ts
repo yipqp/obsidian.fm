@@ -170,7 +170,7 @@ export class ScrobbleModal extends Modal {
 			"scrobble-modal-button-container",
 		);
 
-		const onChooseSuggestionCb = async (item: ItemFormatted) => {
+		const onChooseSuggestionCb = (item: ItemFormatted) => {
 			this.handleChooseSuggestion(item, textComponent);
 		};
 
