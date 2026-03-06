@@ -115,9 +115,12 @@ export const showNotice = (message: string, isError = false) => {
 	new Notice(`${messageFormatted}`, 3500);
 };
 
-export const requireAuth = (fn: () => Promise<void>): (() => Promise<void>) => {
+export const requireAuth = (
+	app: App,
+	fn: () => Promise<void>,
+): (() => Promise<void>) => {
 	return async () => {
-		if (!isAuthenticated()) {
+		if (!isAuthenticated(app)) {
 			showNotice("Please connect your Spotify account", true);
 			return;
 		}

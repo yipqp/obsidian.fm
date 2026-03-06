@@ -1,5 +1,5 @@
 import { Plugin } from "obsidian";
-import { handleAuth } from "src/api";
+import { handleAuth, setCodeVerifier } from "src/api";
 import { registerCommands } from "./commands";
 import { SettingTab } from "./ui/SettingTab";
 import { SCROBBLE_DEFAULT_SETTINGS, scrobbleDefaultSettings } from "./settings";
@@ -12,11 +12,12 @@ export default class Scrobble extends Plugin {
 		this.registerObsidianProtocolHandler(
 			"scrobble-spotify-auth",
 			async (e) => {
-				await handleAuth(e);
+				await handleAuth(this.app, e);
 			},
 		);
 		registerCommands(this);
 		this.addSettingTab(new SettingTab(this.app, this));
+		setCodeVerifier(this.app);
 	}
 
 	onunload() {}
