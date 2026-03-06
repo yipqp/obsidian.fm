@@ -23,14 +23,14 @@ export class ScrobbleModal extends Modal {
 	public app: App;
 	private settings: scrobbleDefaultSettings;
 	private folderPath: string;
-	private onSubmit: (input: string, blockId?: string) => void;
+	private onSubmit: (input: string, blockId?: string) => Promise<void>;
 	private blockId: string | undefined;
 	private item: ItemFormatted;
 	private input = "";
 	private pendingReferences: ItemFormatted[];
 	private handleSubmit = async () => {
 		await this.createReferences();
-		this.onSubmit(this.input, this.blockId);
+		await this.onSubmit(this.input, this.blockId);
 		this.blockId = undefined;
 		this.pendingReferences = [];
 
@@ -123,7 +123,7 @@ export class ScrobbleModal extends Modal {
 		app: App,
 		settings: scrobbleDefaultSettings,
 		item: ItemFormatted,
-		onSubmit: (input: string, blockId?: string) => void,
+		onSubmit: (input: string, blockId?: string) => Promise<void>,
 	) {
 		super(app);
 		this.app = app;
