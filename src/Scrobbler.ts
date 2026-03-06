@@ -157,14 +157,15 @@ export const createAlbumFile = async (
 	return createFile(app, settings, album.id, (frontmatter) => {
 		// use https://github.com/snezhig/obsidian-front-matter-title to display
 		// frontmatter["name"] as the filename
+
 		frontmatter["name"] = album.name;
 		frontmatter["artists"] = album.artists;
-		showType && (frontmatter["type"] = album.type);
-		showAlbumReleaseDate &&
-			(frontmatter["release date"] = album.releaseDate);
-		showDuration && (frontmatter["duration"] = album.duration);
+		if (showType) frontmatter["type"] = album.type;
+		if (showAlbumReleaseDate)
+			frontmatter["release date"] = album.releaseDate;
+		if (showDuration) frontmatter["duration"] = album.duration;
 		frontmatter["tracks"] = tracksFrontmatter;
-		showTags && (frontmatter["tags"] = "");
+		if (showTags) frontmatter["tags"] = "";
 		frontmatter["aliases"] = itemAsString(album, aliasShowArtists);
 	});
 };
@@ -199,10 +200,10 @@ export const createTrackFile = async (
 	return createFile(app, settings, track.id, (frontmatter) => {
 		frontmatter["name"] = track.name;
 		frontmatter["artists"] = track.artists;
-		showType && (frontmatter["type"] = track.type);
+		if (showType) frontmatter["type"] = track.type;
 		frontmatter["album"] = albumWikilink || track.album;
-		showDuration && (frontmatter["duration"] = track.duration);
-		showTags && (frontmatter["tags"] = "");
+		if (showDuration) frontmatter["duration"] = track.duration;
+		if (showTags) frontmatter["tags"] = "";
 		frontmatter["aliases"] = itemAsString(track, aliasShowArtists);
 	});
 };
