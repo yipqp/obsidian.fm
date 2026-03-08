@@ -88,7 +88,7 @@ export function registerCommands(plugin: Scrobble) {
 	plugin.addCommand({
 		id: "log-currently-playing-album",
 		// eslint-disable-next-line obsidianmd/commands/no-plugin-name-in-command-name
-		name: "Scrobbler currently playing album",
+		name: "Scrobble currently playing album",
 		checkCallback: (checking: boolean) => {
 			if (isAuthenticated(plugin.app)) {
 				if (!checking) {
