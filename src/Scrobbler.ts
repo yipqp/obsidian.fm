@@ -189,7 +189,7 @@ export const createAlbumFile = async (
 
 			frontmatter["name"] = album.name;
 			frontmatter["artists"] = album.artists;
-			if (showType) frontmatter["type"] = album.type;
+			if (showType) frontmatter["type"] = "Album";
 			if (showAlbumReleaseDate)
 				frontmatter["release date"] = album.releaseDate;
 			if (showDuration) frontmatter["duration"] = album.duration;
@@ -234,7 +234,7 @@ export const createTrackFile = async (
 		(frontmatter: TrackFrontmatter) => {
 			frontmatter["name"] = track.name;
 			frontmatter["artists"] = track.artists;
-			if (showType) frontmatter["type"] = track.type;
+			if (showType) frontmatter["type"] = "Track";
 			frontmatter["album"] = albumWikilink || track.album;
 			if (showDuration) frontmatter["duration"] = track.duration;
 			if (showTags) frontmatter["tags"] = "";
