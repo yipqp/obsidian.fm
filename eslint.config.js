@@ -17,9 +17,16 @@ export default defineConfig([
 			},
 		},
 
-		rules: {},
+		rules: {
+			"obsidianmd/ui/sentence-case": [
+				"warn",
+				{
+					brands: ["Spotify"],
+				},
+			],
+		},
 	},
 	{
-		ignores: ["node_modules/", "main.js"],
+		ignores: ["node_modules/", "main.js", "eslint.config.js"],
 	},
 ]);

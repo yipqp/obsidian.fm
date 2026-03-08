@@ -55,6 +55,21 @@ export interface AlbumFrontmatter extends MinimalFrontmatter {
 	tracks: string[];
 }
 
+export interface SpotifyErrorResponse {
+	error: {
+		status: number;
+		message: string;
+	};
+}
+
+export type SpotifyResponse = SpotifyErrorResponse | Record<string, unknown>;
+
+export function isSpotifyError(
+	data: SpotifyResponse,
+): data is SpotifyErrorResponse {
+	return "error" in data;
+}
+
 export interface Episode extends SimplifiedEpisode {
 	kind: "episode";
 	show: SimplifiedShow;
@@ -114,6 +129,18 @@ export interface AccessToken {
 	scope: string;
 	expires_in: number;
 	refresh_token: string;
+}
+
+export function isAccessToken(data: unknown): data is AccessToken {
+	return (
+		typeof data === "object" &&
+		data !== null &&
+		"access_token" in data &&
+		"token_type" in data &&
+		"scope" in data &&
+		"expires_in" in data &&
+		"refresh_token" in data
+	);
 }
 
 export interface CurrentlyPlaying {

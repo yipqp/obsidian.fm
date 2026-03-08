@@ -74,6 +74,7 @@ export class SettingTab extends PluginSettingTab {
 					}),
 			)
 			.setDesc(
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				`Show artists in wikilink display text (e.g. "[[trackId|SZA - Good Days]]" vs "[[trackId|Good Days]]")`,
 			);
 
@@ -92,6 +93,7 @@ export class SettingTab extends PluginSettingTab {
 						this.display();
 					}),
 			)
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
 			.setDesc(`Insert "type" property (e.g. "Album" or "Track")`);
 
 		new Setting(containerEl)
@@ -136,7 +138,7 @@ export class SettingTab extends PluginSettingTab {
 			.setDesc(`Insert empty "tags" property`);
 
 		new Setting(containerEl)
-			.setName("Aliases: Show artists")
+			.setName("Aliases: show artists")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.aliasShowArtists)
@@ -147,6 +149,7 @@ export class SettingTab extends PluginSettingTab {
 					}),
 			)
 			.setDesc(
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				`Show artists in "aliases" property (e.g. "SZA - Good Days" vs "Good Days")`,
 			);
 	}

@@ -29,8 +29,17 @@ export class ScrobbleModal extends Modal {
 	private input = "";
 	private pendingReferences: ItemFormattedType[];
 	private handleSubmit = async () => {
-		await this.createReferences();
-		await this.onSubmit(this.input, this.blockId);
+		try {
+			// createReferences first to generate a blockId
+			await this.createReferences();
+			await this.onSubmit(this.input, this.blockId);
+		} catch (e) {
+			if (e instanceof Error) {
+				showNotice(e.message, true);
+				console.error(e);
+			}
+		}
+
 		this.blockId = undefined;
 		this.pendingReferences = [];
 

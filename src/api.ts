@@ -12,9 +12,11 @@ import {
 	SimplifiedArtist,
 	TrackFormatted,
 	TrackLike,
-	AccessToken,
 	SearchResults,
 	ItemFormatted,
+	SpotifyResponse,
+	isSpotifyError,
+	isAccessToken,
 } from "types";
 import { URLSearchParams } from "url";
 import {
@@ -78,7 +80,9 @@ export const requestToken = async (app: App, code: string) => {
 		return null;
 	}
 
-	const response = await requestUrl({
+	let response;
+
+	response = await requestUrl({
 		url: "https://accounts.spotify.com/api/token",
 		method: "POST",
 		headers: {
@@ -93,7 +97,11 @@ export const requestToken = async (app: App, code: string) => {
 		}).toString(),
 	});
 
-	const data: AccessToken = response.json;
+	const data: unknown = response.json;
+
+	if (!isAccessToken(data)) {
+		throw new Error("Spotify response was not access token");
+	}
 
 	setTokens(app, data.access_token, data.expires_in, data.refresh_token);
 
@@ -107,7 +115,9 @@ const refreshTokens = async (app: App) => {
 		return null;
 	}
 
-	const response = await requestUrl({
+	let response;
+
+	response = await requestUrl({
 		url: "https://accounts.spotify.com/api/token",
 		method: "POST",
 		headers: {
@@ -120,7 +130,11 @@ const refreshTokens = async (app: App) => {
 		}).toString(),
 	});
 
-	const data: AccessToken = response.json;
+	const data: unknown = response.json;
+
+	if (!isAccessToken(data)) {
+		throw new Error("Spotify response was not access token");
+	}
 
 	setTokens(app, data.access_token, data.expires_in, data.refresh_token);
 
@@ -133,7 +147,15 @@ export const handleAuth = async (app: App, data: ObsidianProtocolData) => {
 		return;
 	}
 	const code = data.code;
-	await requestToken(app, code);
+
+	try {
+		await requestToken(app, code);
+	} catch (e) {
+		showNotice("Error requesting token", true);
+		console.error(e);
+		return;
+	}
+
 	showNotice("Spotify connected");
 };
 
@@ -146,7 +168,13 @@ const getAccessToken = async (app: App) => {
 
 	const expiration = parseInt(expirationString);
 	if (Date.now() >= expiration) {
-		await refreshTokens(app);
+		try {
+			await refreshTokens(app);
+		} catch (e) {
+			showNotice("Error refreshing token", true);
+			console.error(e);
+			return;
+		}
 	}
 
 	const token = app.loadLocalStorage("access_token") as string;
@@ -162,7 +190,7 @@ export const isAuthenticated = (app: App) => {
 	);
 };
 
-export const callEndpoint = async (app: App, url: string) => {
+export const callEndpoint = async (app: App, url: string): Promise<unknown> => {
 	if (!isAuthenticated(app)) {
 		throw new Error("Please connect your Spotify account");
 	}
@@ -181,9 +209,9 @@ export const callEndpoint = async (app: App, url: string) => {
 		throw new Error("No currently playing track");
 	}
 
-	const data = response.json;
+	const data = response.json as SpotifyResponse;
 
-	if (data.error) {
+	if (isSpotifyError(data)) {
 		if (data.error.status === 401) {
 			throw new Error("Please connect your Spotify account");
 		}

@@ -70,7 +70,8 @@ export function registerCommands(plugin: Scrobble) {
 	};
 
 	plugin.addCommand({
-		id: "scrobble-currently-playing-track",
+		id: "log-currently-playing-track",
+		// eslint-disable-next-line obsidianmd/commands/no-plugin-name-in-command-name
 		name: "Scrobble currently playing song",
 		checkCallback: (checking: boolean) => {
 			if (isAuthenticated(plugin.app)) {
@@ -85,8 +86,9 @@ export function registerCommands(plugin: Scrobble) {
 	});
 
 	plugin.addCommand({
-		id: "scrobble-currently-playing-album",
-		name: "Scrobble currently playing album",
+		id: "log-currently-playing-album",
+		// eslint-disable-next-line obsidianmd/commands/no-plugin-name-in-command-name
+		name: "Scrobbler currently playing album",
 		checkCallback: (checking: boolean) => {
 			if (isAuthenticated(plugin.app)) {
 				if (!checking) {
