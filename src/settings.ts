@@ -1,4 +1,5 @@
 export interface scrobbleDefaultSettings {
+	clientID: string;
 	folderPath: string;
 	scrobbleAlbumAlwaysCreatesNewTrackFiles: boolean;
 	showType: boolean;
@@ -10,6 +11,7 @@ export interface scrobbleDefaultSettings {
 }
 
 export const SCROBBLE_DEFAULT_SETTINGS: scrobbleDefaultSettings = {
+	clientID: "",
 	folderPath: "",
 	scrobbleAlbumAlwaysCreatesNewTrackFiles: false,
 	showType: true,

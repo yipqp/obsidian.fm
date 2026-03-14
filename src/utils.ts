@@ -1,6 +1,5 @@
 import { App, normalizePath, Notice, TFile } from "obsidian";
 import { MinimalItem, TrackFormatted } from "types";
-import { isAuthenticated } from "./api";
 
 export const generateRandomString = (length: number) => {
 	const possible =

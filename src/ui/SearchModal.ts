@@ -16,15 +16,22 @@ export class SearchModal extends SuggestModal<ItemFormatted> {
 		[query: string, cb: (items: ItemFormatted[]) => void],
 		void
 	>;
-	cb: (item: ItemFormatted) => void;
+	clientID: string;
 	type: ItemType;
+	cb: (item: ItemFormatted) => void;
 
-	constructor(app: App, type: ItemType, cb: (item: ItemFormatted) => void) {
+	constructor(
+		app: App,
+		clientID: string,
+		type: ItemType,
+		cb: (item: ItemFormatted) => void,
+	) {
 		super(app);
 		this.isLoading = false;
 		this.lastQuery = "";
-		this.cb = cb;
+		this.clientID = clientID;
 		this.type = type;
+		this.cb = cb;
 		this.searchDebouncer = debounce(
 			async (query: string, cb: (items: ItemFormatted[]) => void) => {
 				if (query === "" || query === this.lastQuery) {
@@ -33,7 +40,12 @@ export class SearchModal extends SuggestModal<ItemFormatted> {
 
 				this.lastQuery = query;
 
-				const data = await searchItem(this.app, query, this.type);
+				const data = await searchItem(
+					this.app,
+					this.clientID,
+					query,
+					this.type,
+				);
 
 				if (!data) {
 					return Promise.resolve([]);
@@ -101,6 +113,7 @@ export class SearchModal extends SuggestModal<ItemFormatted> {
 				}
 				const fetchedAlbum = (await callEndpoint(
 					this.app,
+					this.clientID,
 					item.href,
 				)) as Album;
 				resolved = processAlbum(fetchedAlbum);

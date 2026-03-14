@@ -16,11 +16,24 @@ export class SettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		new Setting(containerEl).setName("Client ID").addText((text) => {
+			text.inputEl.type = "password";
+			text.setPlaceholder("Enter client ID here")
+				.setValue(this.plugin.settings.clientID)
+				.onChange(async (value) => {
+					this.plugin.settings.clientID = value;
+					await this.plugin.saveSettings();
+				});
+		});
+
 		new Setting(containerEl)
 			.setName("Connect Spotify")
 			.addButton((button) =>
 				button.setButtonText("Connect").onClick(async () => {
-					const authUrl = await getAuthUrl(this.app);
+					const authUrl = await getAuthUrl(
+						this.app,
+						this.plugin.settings.clientID,
+					);
 					window.open(authUrl);
 				}),
 			);

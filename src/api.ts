@@ -31,7 +31,6 @@ import {
 import { updateTrackFrontmatter } from "./Scrobbler";
 import { scrobbleDefaultSettings } from "./settings";
 
-const clientId = "44e32ffa3b9c46398637431d6808481d";
 const redirectUri = "obsidian://scrobble-spotify-auth";
 const scope = "user-read-currently-playing user-read-recently-played";
 
@@ -40,14 +39,14 @@ export const setCodeVerifier = (app: App) => {
 	app.saveLocalStorage("code_verifier", codeVerifier);
 };
 
-export const getAuthUrl = async (app: App) => {
+export const getAuthUrl = async (app: App, clientID: string) => {
 	const codeVerifier = app.loadLocalStorage("code_verifier") as string;
 	const authUrl = new URL("https://accounts.spotify.com/authorize");
 	const hashed = await sha256(codeVerifier);
 	const codeChallenge = base64encode(hashed);
 	const params = {
 		response_type: "code",
-		client_id: clientId,
+		client_id: clientID,
 		scope,
 		code_challenge_method: "S256",
 		code_challenge: codeChallenge,
@@ -73,7 +72,11 @@ const setTokens = (
 };
 
 // exchange auth code for access token
-export const requestToken = async (app: App, code: string) => {
+export const requestToken = async (
+	app: App,
+	clientID: string,
+	code: string,
+) => {
 	const codeVerifier = app.loadLocalStorage("code_verifier") as string;
 	if (!codeVerifier) {
 		showNotice("Code verifier not found", true);
@@ -89,7 +92,7 @@ export const requestToken = async (app: App, code: string) => {
 			"Content-Type": "application/x-www-form-urlencoded",
 		},
 		body: new URLSearchParams({
-			client_id: clientId,
+			client_id: clientID,
 			grant_type: "authorization_code",
 			code,
 			redirect_uri: redirectUri,
@@ -108,7 +111,7 @@ export const requestToken = async (app: App, code: string) => {
 	return data;
 };
 
-const refreshTokens = async (app: App) => {
+const refreshTokens = async (app: App, clientID: string) => {
 	const refreshToken = app.loadLocalStorage("refresh_token") as string;
 	if (!refreshToken) {
 		showNotice("Refresh token not found", true);
@@ -126,7 +129,7 @@ const refreshTokens = async (app: App) => {
 		body: new URLSearchParams({
 			grant_type: "refresh_token",
 			refresh_token: refreshToken,
-			client_id: clientId,
+			client_id: clientID,
 		}).toString(),
 	});
 
@@ -141,7 +144,11 @@ const refreshTokens = async (app: App) => {
 	return data;
 };
 
-export const handleAuth = async (app: App, data: ObsidianProtocolData) => {
+export const handleAuth = async (
+	app: App,
+	clientID: string,
+	data: ObsidianProtocolData,
+) => {
 	if (data?.error) {
 		showNotice(data.error, true);
 		return;
@@ -149,7 +156,7 @@ export const handleAuth = async (app: App, data: ObsidianProtocolData) => {
 	const code = data.code;
 
 	try {
-		await requestToken(app, code);
+		await requestToken(app, clientID, code);
 	} catch (e) {
 		showNotice("Error requesting token", true);
 		console.error(e);
@@ -159,7 +166,7 @@ export const handleAuth = async (app: App, data: ObsidianProtocolData) => {
 	showNotice("Spotify connected");
 };
 
-const getAccessToken = async (app: App) => {
+const getAccessToken = async (app: App, clientID: string) => {
 	const expirationString = app.loadLocalStorage("expires_in") as string;
 	if (!expirationString) {
 		showNotice("Could not get expires_in", true);
@@ -169,7 +176,7 @@ const getAccessToken = async (app: App) => {
 	const expiration = parseInt(expirationString);
 	if (Date.now() >= expiration) {
 		try {
-			await refreshTokens(app);
+			await refreshTokens(app, clientID);
 		} catch (e) {
 			showNotice("Error refreshing token", true);
 			console.error(e);
@@ -190,8 +197,12 @@ export const isAuthenticated = (app: App) => {
 	);
 };
 
-export const callEndpoint = async (app: App, url: string): Promise<unknown> => {
-	const accessToken = (await getAccessToken(app)) ?? "";
+export const callEndpoint = async (
+	app: App,
+	clientID: string,
+	url: string,
+): Promise<unknown> => {
+	const accessToken = (await getAccessToken(app, clientID)) ?? "";
 
 	if (!accessToken) {
 		app.saveLocalStorage("access_token", null);
@@ -223,17 +234,19 @@ export const callEndpoint = async (app: App, url: string): Promise<unknown> => {
 	return data;
 };
 
-export const getCurrentlyPlayingTrack = async (app: App) => {
+export const getCurrentlyPlayingTrack = async (app: App, clientID: string) => {
 	const data = (await callEndpoint(
 		app,
+		clientID,
 		"https://api.spotify.com/v1/me/player/currently-playing",
 	)) as CurrentlyPlaying;
 	return data;
 };
 
-export const getRecentlyPlayed = async (app: App) => {
+export const getRecentlyPlayed = async (app: App, clientID: string) => {
 	const data = (await callEndpoint(
 		app,
+		clientID,
 		"https://api.spotify.com/v1/me/player/recently-played",
 	)) as RecentlyPlayedTracksPage;
 	return data;
@@ -241,6 +254,7 @@ export const getRecentlyPlayed = async (app: App) => {
 
 export const searchItem = async <T extends ItemType>(
 	app: App,
+	clientID: string,
 	query: string,
 	itemType: ItemType,
 ) => {
@@ -258,6 +272,7 @@ export const searchItem = async <T extends ItemType>(
 
 	const data = (await callEndpoint(
 		app,
+		clientID,
 		searchURL.toString(),
 	)) as SearchResults<[T]>;
 
@@ -288,6 +303,7 @@ export const tracksAsWikilinks = (
 
 export const processCurrentlyPlayingResponse = async (
 	app: App,
+	clientID: string,
 	playbackState: CurrentlyPlaying,
 	itemType: ItemType,
 ) => {
@@ -304,7 +320,7 @@ export const processCurrentlyPlayingResponse = async (
 		if (!albumLink) {
 			throw new Error("No album href found");
 		}
-		const album = (await callEndpoint(app, albumLink)) as Album;
+		const album = (await callEndpoint(app, clientID, albumLink)) as Album;
 		const albumInfo = processAlbum(album);
 		return albumInfo;
 	}

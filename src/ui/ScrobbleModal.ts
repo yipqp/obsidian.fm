@@ -185,6 +185,7 @@ export class ScrobbleModal extends Modal {
 		const openSearchModal = () => {
 			new SearchModal(
 				this.app,
+				this.settings.clientID,
 				this.item.type,
 				onChooseSuggestionCb,
 			).open();

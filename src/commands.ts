@@ -42,9 +42,11 @@ export function registerCommands(plugin: Scrobble) {
 		try {
 			const currentlyPlayingJson = await getCurrentlyPlayingTrack(
 				plugin.app,
+				plugin.settings.clientID,
 			);
 			const currentlyPlaying = await processCurrentlyPlayingResponse(
 				plugin.app,
+				plugin.settings.clientID,
 				currentlyPlayingJson,
 				itemType,
 			);
@@ -101,7 +103,10 @@ export function registerCommands(plugin: Scrobble) {
 		id: "connect-spotify",
 		name: "Connect Spotify",
 		callback: async () => {
-			const authUrl = await getAuthUrl(plugin.app);
+			const authUrl = await getAuthUrl(
+				plugin.app,
+				plugin.settings.clientID,
+			);
 			window.open(authUrl);
 		},
 	});
@@ -114,6 +119,7 @@ export function registerCommands(plugin: Scrobble) {
 				if (!checking) {
 					new SearchModal(
 						plugin.app,
+						plugin.settings.clientID,
 						"track",
 						scrobbleSearchedSong,
 					).open();
@@ -132,6 +138,7 @@ export function registerCommands(plugin: Scrobble) {
 				if (!checking) {
 					new SearchModal(
 						plugin.app,
+						plugin.settings.clientID,
 						"album",
 						scrobbleSearchedSong,
 					).open();
@@ -152,6 +159,7 @@ export function registerCommands(plugin: Scrobble) {
 						try {
 							const recentlyPlayed = await getRecentlyPlayed(
 								plugin.app,
+								plugin.settings.clientID,
 							);
 							const recentlyPlayedFormatted =
 								processRecentlyPlayed(recentlyPlayed);
