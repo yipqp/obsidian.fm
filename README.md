@@ -44,7 +44,7 @@ https://github.com/user-attachments/assets/5edd56a3-eb8d-434d-a8fa-a17e1e9dcd25
 
 ## Usage
 
-1. Go to the [Spotify for Developers dashboard](https://developer.spotify.com/dashboard) and click **Create app** 
+1. Go to the [Spotify for Developers dashboard](https://developer.spotify.com/dashboard) (you may need to log in first) and click **Create app** 
 2. Enter a name for the new app (e.g. "Obsidian Scrobble"), enter a description, and paste `obsidian://scrobble-spotify-auth` under **Redirect URIs**
 3. Under "Which API/SDKs are you planning to use?" select **Web API** and press **Save**
 4. Copy the **Client ID** and go back to Obsidian, pasting it in the **Client ID** section of the Scrobble settings tab
