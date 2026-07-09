@@ -17,6 +17,8 @@ export interface TrackFormatted extends ItemFormatted {
 	album: string;
 	albumid: string;
 	duration: string;
+	trackNumber: number;
+	discNumber: number;
 	progress?: string;
 }
 
@@ -30,7 +32,7 @@ export interface AlbumFormatted extends ItemFormatted {
 
 export type TrackLike = Pick<
 	Track,
-	"artists" | "id" | "name" | "duration_ms"
+	"artists" | "id" | "name" | "duration_ms" | "track_number" | "disc_number"
 > & {
 	album: Pick<Track["album"], "name" | "id" | "images">;
 };
@@ -48,6 +50,8 @@ export interface MinimalFrontmatter {
 
 export interface TrackFrontmatter extends MinimalFrontmatter {
 	album: string;
+	track?: number;
+	disc?: number;
 }
 
 export interface AlbumFrontmatter extends MinimalFrontmatter {

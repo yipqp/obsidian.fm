@@ -358,6 +358,8 @@ export const processTrack = (track: TrackLike): TrackFormatted => {
 		name: track.name,
 		image: track.album.images[track.album.images.length - 1],
 		duration: formatMs(track.duration_ms),
+		trackNumber: track.track_number,
+		discNumber: track.disc_number,
 	};
 };
 
