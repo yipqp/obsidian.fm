@@ -206,7 +206,7 @@ export const createTrackFile = async (
 	settings: scrobbleDefaultSettings,
 	track: TrackFormatted,
 ) => {
-	const { folderPath, showTags, showType, showDuration, aliasShowArtists } =
+	const { folderPath, showTags, showType, showDuration, showTrackNumber, showDiscNumber, aliasShowArtists } =
 		settings;
 
 	if (!track.id) {
@@ -237,6 +237,8 @@ export const createTrackFile = async (
 			if (showType) frontmatter["type"] = "Track";
 			frontmatter["album"] = albumWikilink || track.album;
 			if (showDuration) frontmatter["duration"] = track.duration;
+			if (showTrackNumber) frontmatter["track"] = track.trackNumber;
+			if (showDiscNumber) frontmatter["disc"] = track.discNumber;
 			if (showTags) frontmatter["tags"] = "";
 			frontmatter["aliases"] = itemAsString(track, aliasShowArtists);
 		},

@@ -121,6 +121,32 @@ export class SettingTab extends PluginSettingTab {
 			.setDesc(`Insert "duration" property (e.g. "5:20")`);
 
 		new Setting(containerEl)
+			.setName("Track number")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showTrackNumber)
+					.onChange(async (value) => {
+						this.plugin.settings.showTrackNumber = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			)
+			.setDesc(`Insert "track" property (e.g. "1")`);
+
+		new Setting(containerEl)
+			.setName("Disc number")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showDiscNumber)
+					.onChange(async (value) => {
+						this.plugin.settings.showDiscNumber = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			)
+			.setDesc(`Insert "disc" property (e.g. "2")`);
+
+		new Setting(containerEl)
 			.setName("Album release date")
 			.addToggle((toggle) =>
 				toggle

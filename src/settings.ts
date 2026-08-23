@@ -4,6 +4,8 @@ export interface scrobbleDefaultSettings {
 	scrobbleAlbumAlwaysCreatesNewTrackFiles: boolean;
 	showType: boolean;
 	showDuration: boolean;
+	showTrackNumber: boolean;
+	showDiscNumber: boolean;
 	showTags: boolean;
 	showAlbumReleaseDate: boolean;
 	aliasShowArtists: boolean;
@@ -16,6 +18,8 @@ export const SCROBBLE_DEFAULT_SETTINGS: scrobbleDefaultSettings = {
 	scrobbleAlbumAlwaysCreatesNewTrackFiles: false,
 	showType: true,
 	showDuration: true,
+	showTrackNumber: false,
+	showDiscNumber: false,
 	showAlbumReleaseDate: true,
 	showTags: true,
 	aliasShowArtists: true,
