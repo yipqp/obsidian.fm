@@ -169,7 +169,7 @@ export class ScrobbleModal extends Modal {
 			this.input = value;
 		});
 
-		this.contentEl.createEl("div", {
+		this.contentEl.createDiv({
 			text: this.item.type === "track" ? this.item.progress : "",
 			cls: "scrobble-modal-progress",
 		});

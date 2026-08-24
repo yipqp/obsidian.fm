@@ -38,9 +38,7 @@ export class RecentSongsModal extends FuzzySuggestModal<TrackFormatted> {
 
 		const trackTextContainer = el.createDiv("track-text-container");
 
-		const trackTitle = trackTextContainer.createEl("div", {
-			cls: "item-title",
-		});
+		const trackTitle = trackTextContainer.createDiv({ cls: "item-title" });
 		renderResults(trackTitle, match.item.name, match.match);
 
 		const trackArtists = trackTextContainer.createEl("small");

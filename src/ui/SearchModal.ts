@@ -92,10 +92,7 @@ export class SearchModal extends SuggestModal<ItemFormatted> {
 		imageEl.src = item.image.url;
 
 		const trackTextContainer = el.createDiv("track-text-container");
-		trackTextContainer.createEl("div", {
-			text: item.name,
-			cls: "item-title",
-		});
+		trackTextContainer.createDiv({ text: item.name, cls: "item-title" });
 		trackTextContainer.createEl("small", {
 			text: item.artists.toString(),
 		});
