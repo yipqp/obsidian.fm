@@ -1,3 +1,14 @@
+import "obsidian";
+
+declare module "obsidian" {
+	interface App {
+		commands: {
+			executeCommandById(id: string): boolean;
+			findCommand(id: string): import("obsidian").Command;
+		};
+	}
+}
+
 // https://github.com/spotify/spotify-web-api-ts-sdk/blob/main/src/types.ts
 
 export type ItemType = "track" | "album";
